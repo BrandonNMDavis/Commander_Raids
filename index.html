@@ -30,7 +30,7 @@
             font-size: 16px;
             border-radius: 6px;
             cursor: pointer;
-            margin: 10px;
+            margin: 5px;
             font-weight: bold;
             transition: transform 0.1s, background-color 0.2s;
         }
@@ -59,6 +59,7 @@
         
         #hp-display { transition: color 0.2s; }
         .damage-pulse { color: #ff0000; animation: shake 0.3s; }
+        .heal-pulse { color: #00ff00; }
         @keyframes shake {
             0% { transform: translate(1px, 1px); }
             20% { transform: translate(-1px, -2px); }
@@ -72,20 +73,32 @@
             background-color: #111;
             padding: 15px;
             border-radius: 8px;
-            height: 250px;
+            height: 300px;
             overflow-y: auto;
             text-align: left;
             margin-top: 20px;
             border: 1px solid #444;
         }
-        .log-entry { margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; line-height: 1.4; }
+        .log-entry { margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px; line-height: 1.4; }
         .monster-action { color: #ffaa00; font-weight: bold; }
         
+        .reroll-btn {
+            background-color: #444;
+            color: #fff;
+            padding: 2px 8px;
+            font-size: 11px;
+            margin-left: 10px;
+            border-radius: 4px;
+            vertical-align: middle;
+        }
+        .reroll-btn:hover { background-color: #666; }
+
         .rolling-text { color: #ff5555; font-style: italic; animation: pulse 0.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         .btn-undo { background-color: #888; }
-        .btn-damage { background-color: #555; }
+        .btn-damage { background-color: #b33939; }
+        .btn-heal { background-color: #218c74; }
         .btn-restart { background-color: #222; border: 1px solid #666; margin-top: 20px; width: 100%; }
         
         .modal {
@@ -116,7 +129,6 @@
             line-height: 1.6;
         }
         .attribution a { color: #ff5555; text-decoration: none; }
-        .attribution a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -127,7 +139,7 @@
         <h2 style="margin-top: 0;">Raid Rules Summary</h2>
         <p><strong>Turn Structure:</strong> Monster goes last. Skips turn 1, rolls 1 die on turn 2, then adds 1 die every even turn.</p>
         <p><strong>Counters:</strong> Monster spells cannot be countered. Counterspells force a re-roll.</p>
-        <p><strong>Immunity:</strong> Commander damage and "You win" effects do nothing against the monster.</p>
+        <p><strong>Immunity:</strong> Commander damage and "You win" effects do nothing.</p>
     </div>
 </div>
 
@@ -150,15 +162,14 @@
         <button style="background-color: #444; font-size: 12px;" onclick="toggleMusic()" id="music-btn">Play Atmosphere 🎵</button>
     </div>
 
-    <button style="background-color: #444;" onclick="toggleRules()">View Rules</button>
+    <button style="background-color: #444;" onclick="toggleRules()">View Summary</button>
 
     <div class="attribution">
         Format created by <strong>Cardboard Odysseys</strong>.<br>
-        Watch them on <a href="https://www.youtube.com/@Cardboard_Odysseys" target="_blank">YouTube</a>.<br>
-        Contact: <a href="mailto:commanderraids@gmail.com">commanderraids@gmail.com</a>.<br>
-        Join the <a href="https://discord.gg/sRZ738kbCs" target="_blank">Discord Community</a>.<br>
+        <a href="https://docs.google.com/document/d/1mJ7J9D7mtmXVKVu_Glc0JekXbOOHAvey42NB5B7oqfc/edit?tab=t.0" target="_blank">Original Rules Document</a> | <a href="https://www.youtube.com/@Cardboard_Odysseys" target="_blank">YouTube</a><br>
+        Contact: <a href="mailto:commanderraids@gmail.com">commanderraids@gmail.com</a> | <a href="https://discord.gg/sRZ738kbCs" target="_blank">Discord</a><br>
         <br>
-        <em>Developed with the help of <a href="https://gemini.google/about/" target="_blank">Google Gemini</a>.</em>
+        <em>Developed with <a href="https://gemini.google/about/" target="_blank">Google Gemini</a></em>
     </div>
 </div>
 
@@ -175,7 +186,11 @@
 
     <button id="action-btn" onclick="takeMonsterTurn()">Advance to Turn 2</button>
     <button class="btn-undo" onclick="undoTurn()">Undo</button>
-    <button class="btn-damage" onclick="damageMonster()">-1 HP</button>
+    
+    <div style="margin-top: 10px;">
+        <button class="btn-damage" onclick="damageMonster()">-1 HP</button>
+        <button class="btn-heal" onclick="healMonster()">+1 HP</button>
+    </div>
     
     <div class="log-box" id="action-log">
         <div class="log-entry">Encounter started. Good luck!</div>
@@ -193,13 +208,8 @@
 
     function toggleMusic() {
         const btn = document.getElementById("music-btn");
-        if (music.paused) {
-            music.play();
-            btn.innerText = "Pause Atmosphere ⏸";
-        } else {
-            music.pause();
-            btn.innerText = "Play Atmosphere 🎵";
-        }
+        if (music.paused) { music.play(); btn.innerText = "Pause Atmosphere ⏸"; }
+        else { music.pause(); btn.innerText = "Play Atmosphere 🎵"; }
     }
 
     function toggleRules() {
@@ -211,11 +221,9 @@
         const diff = document.getElementById("difficulty").value;
         const count = parseInt(document.getElementById("players").value);
         currentDifficulty = diff;
-
         if (diff === "easy") monsterHp = count * 20;
         else if (diff === "baseline") monsterHp = count * 30;
         else if (diff === "hard") monsterHp = count * 50;
-
         document.getElementById("hp-display").innerText = monsterHp;
         document.getElementById("setup-screen").style.display = "none";
         document.getElementById("game-screen").style.display = "block";
@@ -234,10 +242,20 @@
     function damageMonster() {
         saveState();
         monsterHp -= 1;
+        updateHpDisplay("damage-pulse");
+    }
+
+    function healMonster() {
+        saveState();
+        monsterHp += 1;
+        updateHpDisplay("heal-pulse");
+    }
+
+    function updateHpDisplay(animationClass) {
         const display = document.getElementById("hp-display");
         display.innerText = monsterHp;
-        display.classList.add("damage-pulse");
-        setTimeout(() => display.classList.remove("damage-pulse"), 300);
+        display.classList.add(animationClass);
+        setTimeout(() => display.classList.remove(animationClass), 300);
     }
 
     function undoTurn() {
@@ -252,6 +270,13 @@
         document.getElementById("action-btn").innerText = prev.btnText;
     }
 
+    function rerollDie(elementId, DR) {
+        const line = document.getElementById(elementId);
+        const newRoll = Math.floor(Math.random() * 20) + 1;
+        const newAction = getMonsterAction(currentDifficulty, newRoll, DR);
+        line.innerHTML = `<span class="monster-action">🎲 ${newRoll}:</span> ${newAction} <button class="reroll-btn" onclick="rerollDie('${elementId}', ${DR})">🔄 Re-roll</button>`;
+    }
+
     function takeMonsterTurn() {
         const btn = document.getElementById("action-btn");
         btn.disabled = true;
@@ -259,17 +284,18 @@
         saveState(); 
         document.getElementById("turn-display").innerText = currentTurn;
         const logBox = document.getElementById("action-log");
-        const tempId = "roll-" + Date.now();
-        logBox.innerHTML = `<div class="log-entry" id="${tempId}"><span class="rolling-text">Rolling turn ${currentTurn} dice...</span></div>` + logBox.innerHTML;
+        const entryId = "entry-" + Date.now();
+        logBox.innerHTML = `<div class="log-entry" id="${entryId}"><span class="rolling-text">Rolling turn ${currentTurn} dice...</span></div>` + logBox.innerHTML;
 
         setTimeout(() => {
             let diceCount = Math.floor(currentTurn / 2);
-            let resultsHTML = `<strong>Turn ${currentTurn}</strong><br>`;
+            let entryContent = `<strong>Turn ${currentTurn}</strong><br>`;
             for (let i = 0; i < diceCount; i++) {
                 let roll = Math.floor(Math.random() * 20) + 1;
-                resultsHTML += `<span class="monster-action">🎲 ${roll}:</span> ${getMonsterAction(currentDifficulty, roll, diceCount)}<br>`;
+                let dieId = `die-${Date.now()}-${i}`;
+                entryContent += `<div id="${dieId}"><span class="monster-action">🎲 ${roll}:</span> ${getMonsterAction(currentDifficulty, roll, diceCount)} <button class="reroll-btn" onclick="rerollDie('${dieId}', ${diceCount})">🔄 Re-roll</button></div>`;
             }
-            document.getElementById(tempId).innerHTML = resultsHTML;
+            document.getElementById(entryId).innerHTML = entryContent;
             btn.innerText = `Advance to Turn ${currentTurn + 1}`;
             btn.disabled = false;
         }, 800);
@@ -287,15 +313,15 @@
 
     function getMonsterAction(diff, roll, DR) {
         if (diff === "easy") {
-            if (roll === 1) return "Each opponent discards 1 card, mills 1, and sacrifices a creature, enchantment or artifact.";
+            if (roll === 1) return "Each opponent discards 1 card, mills 1, and sacrifices a non-land.";
             if (roll === 2) return `Each opponent sacrifices ${DR} creatures.`;
             if (roll === 3) return "Each opponent destroys target legendary permanent of their choice.";
-            if (roll <= 5) return "Each opponent loses 5 life and deal 3 damage to each planeswalker.";
+            if (roll <= 5) return "Each opponent loses 5 life and deal 3 damage to planeswalkers.";
             if (roll <= 7) return "The Raid Monster gains 5 life and removes 5 infect counters.";
             if (roll <= 9) return "Players cannot draw more than 2 cards or play more than two spells until next monster turn.";
             if (roll === 10) return "Each opponent sacrifices half the number of tokens they control.";
             if (roll === 11) return "Each opponent destroys target enchantment of their choice.";
-            if (roll <= 13) return `Create 2 ${DR}/${DR} Fly/Deathtouch/Defender tokens. Creatures attack if able.`;
+            if (roll <= 13) return `Create two ${DR}/${DR} Fly/Deathtouch/Defender tokens. Creatures attack if able.`;
             if (roll === 14) return "Each opponent sacrifices half the number of enchantments they control rounded up.";
             if (roll === 15) return "Each opponent destroys target artifact of their choice.";
             if (roll === 16) return "Each opponent sacrifices half the number of artifacts they control rounded up.";

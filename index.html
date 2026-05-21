@@ -211,8 +211,8 @@
         .btn-undo { background-color: #888; }
         .btn-damage { background-color: #b33939; }
         .btn-heal { background-color: #218c74; }
-        .btn-draw { background-color: #0984e3; font-size: 14px; padding: 8px 16px; width: 100%; margin: 0; }
-        .btn-inject { background-color: #d63031; font-size: 12px; padding: 6px 12px; width: 100%; margin: 0; }
+        .btn-advance-boss { background-color: #0984e3; font-size: 14px; padding: 10px 16px; width: 100%; margin: 0 0 10px 0; }
+        .btn-victory { background-color: #ffaa00; font-size: 14px; padding: 10px 16px; width: 100%; margin: 0 0 10px 0; color: #111; }
         .btn-restart { background-color: #222; border: 1px solid #666; margin-top: 20px; width: 100%; }
         
         .modal {
@@ -287,7 +287,7 @@
 <div id="boonModal" class="modal">
     <div class="modal-content">
         <h2 style="margin-top: 0; color: #218c74;">Choose Your Boon</h2>
-        <p style="font-size: 14px; color: #ccc;">Select one Boon to keep. The others will be shuffled back into the deck.</p>
+        <p style="font-size: 14px; color: #ccc;">Select one Boon to keep. The others will be shuffled back into the deck, and the next boss will spawn!</p>
         <div id="boon-choices-container">
             </div>
     </div>
@@ -300,7 +300,7 @@
         <label style="font-weight: bold; color: #ffaa00; display: block;">Game Mode:</label>
         <select id="gameMode" onchange="toggleMode()" style="width: 80%; max-width: 300px;">
             <option value="standard">Standard Mode</option>
-            <option value="gauntlet">Gauntlet Mode</option>
+            <option value="gauntlet">Gauntlet Campaign</option>
         </select>
     </div>
 
@@ -314,11 +314,9 @@
     </div>
 
     <div id="gauntlet-options" style="display: none;">
-        <label style="display: block;">Gauntlet Boss:</label>
-        <select id="gauntletBoss" style="width: 80%; max-width: 300px;">
-            <option value="rona">1. Rona, Sheoldred's Faithful (20 HP)</option>
-            <option value="ertai">2. Ertai Resurrected (25 HP)</option>
-            <option value="sheoldred">3. Sheoldred, the Apocalypse (30 HP)</option>
+        <label style="display: block;">Select Gauntlet Campaign:</label>
+        <select id="gauntletCampaign" style="width: 80%; max-width: 350px;">
+            <option value="sheoldred">Sheoldred's Invasion (Rona ➔ Ertai ➔ Sheoldred)</option>
         </select>
     </div>
 
@@ -350,13 +348,13 @@
 
 <div class="container" id="game-screen">
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="color: #ff5555; margin: 0;">Combat Tracker</h2>
+        <h2 style="color: #ff5555; margin: 0;" id="combat-tracker-header">Combat Tracker</h2>
         <button style="background-color: #444; padding: 5px 12px; font-size: 12px;" onclick="toggleRules()">Rules</button>
     </div>
     
     <div class="stats-box">
         <div class="stat">Turn: <span id="turn-display">1</span></div>
-        <div class="stat">Monster HP: <span id="hp-display">0</span></div>
+        <div class="stat">Boss HP: <span id="hp-display">0</span></div>
     </div>
 
     <div id="static-abilities-box" class="static-abilities-box" style="display: none;">
@@ -366,8 +364,8 @@
     <div id="gauntlet-tracker-box" class="gauntlet-tracker-box" style="display: none;">
         <div class="tracker-column">
             <div class="boon-actions-container">
-                <button class="btn-draw" onclick="drawBoons()">🎁 Draw Boons (<span id="deck-count-display">45</span>)</button>
-                <button class="btn-inject" id="inject-boons-btn" onclick="injectBossBoons()">⚔️ Shuffle Boss Boons Into Pool</button>
+                <button id="btn-advance-boss" class="btn-advance-boss" onclick="defeatLieutenantAndAdvance()">⚔️ Defeat Boss & Advance</button>
+                <div style="font-size: 11px; color: #888; text-align: center;">Deck Pool: <span id="deck-count-display">45</span> Boons</div>
             </div>
             <div class="active-boons-list" id="active-boons-container">
                 <div style="color: #666; font-style: italic; font-size: 13px;">No Boons Acquired Yet.</div>
@@ -427,13 +425,12 @@
         <div class="log-entry">Encounter started. Good luck!</div>
     </div>
 
-    <button class="btn-restart" onclick="restartRaid()">End Game & Reset</button>
+    <button class="btn-restart" onclick="restartRaid()">End Run & Reset</button>
 </div>
 
 <script>
     // --- BASIC BOON DECK DATA (45 Cards) ---
     const basicBoons = [
-        // Common (24)
         { rarity: "Common", name: "Blade Dance", text: "At the beginning of combat, choose a creature you control. It gains first strike until the end of combat." },
         { rarity: "Common", name: "Healing Banner", text: "At the beginning of combat, choose a creature you control. It gains lifelink until the end of combat." },
         { rarity: "Common", name: "Kite Sail", text: "At the beginning of combat, choose a creature you control. It gains flying until the end of combat." },
@@ -445,21 +442,19 @@
         { rarity: "Common", name: "Compulsive Researcher", text: "At the beginning of your upkeep you may discard a card, if you do draw a card." },
         { rarity: "Common", name: "Frugal Apprentice", text: "Reduce your commander cost by {1} colorless." },
         { rarity: "Common", name: "Might of the Pack", text: "Creatures you control get +1/+1." },
-        { rarity: "Common", name: "Soul Harvester", text: "Whenever a creature enters the battlefield under your control, you may pay {2} colorless mana. If you do, draw a card." },
+        { rarity: "Common", name: "Soul Harvester", text: "Whenever a creature enters the battlefield under your control, you may pay {2}. If you do, draw a card." },
         { rarity: "Common", name: "Call to Arms", text: "At the beginning of your end step, create a 1/1 soldier token." },
-        { rarity: "Common", name: "Foundry Assistant", text: "Artifact spells you cast cost {1} colorless less to cast." },
-        { rarity: "Common", name: "Nature's Bounty", text: "Flip over Nature’s Bounty until the start of your next game: You may search your library for a basic land card and put it on the battlefield tapped." },
-        { rarity: "Common", name: "Thoughtful Offering", text: "{Tap}: Add {1} to your mana pool. {1}, Flip over Thoughtful Offering until the start of your next game: Draw a card." },
+        { rarity: "Common", name: "Foundry Assistant", text: "Artifact spells you cast cost {1} less to cast." },
+        { rarity: "Common", name: "Nature's Bounty", text: "Flip over Nature’s Bounty until the start of your next game: Search library for a basic land and put it on battlefield tapped." },
+        { rarity: "Common", name: "Thoughtful Offering", text: "{Tap}: Add {1}. Pay {1}, Flip over until the start of your next game: Draw a card." },
         { rarity: "Common", name: "Hand Expansion", text: "Increase your maximum hand size by 2." },
-        { rarity: "Common", name: "Blood for Soil", text: "Once on each of your turns you may pay 2 life and sacrifice a basic land, if you do, search your library for a basic land and put it onto the battlefield tapped." },
+        { rarity: "Common", name: "Blood for Soil", text: "Once per turn pay 2 life and sac a basic land: search library for a basic land and put it onto battlefield tapped." },
         { rarity: "Common", name: "Seer's Insight", text: "At the beginning of your upkeep, scry 1." },
-        { rarity: "Common", name: "Mystic Scribe", text: "Instants and sorcery spells you cast cost 1 colorless less to cast." },
+        { rarity: "Common", name: "Mystic Scribe", text: "Instants and sorcery spells you cast cost 1 less to cast." },
         { rarity: "Common", name: "Nightwatch Agent", text: "At the beginning of your upkeep, surveil 1." },
         { rarity: "Common", name: "Treasure Trove", text: "At the beginning of your end step, create a treasure token." },
         { rarity: "Common", name: "Investigation Expert", text: "At the beginning of your end step, create a clue token." },
-        { rarity: "Common", name: "Echoes from Beyond", text: "Once per game you may exile 7 cards from your graveyard. If you do, you may draw three cards. Flip this boon over until the start of the next game." },
-        
-        // Uncommon (12)
+        { rarity: "Common", name: "Echoes from Beyond", text: "Once per game exile 7 cards from your graveyard to draw three cards. Flip until start of next game." },
         { rarity: "Uncommon", name: "Blades of Fury", text: "At the beginning of combat, choose a creature you control. It gains double strike until the end of combat." },
         { rarity: "Uncommon", name: "Eternal Champion", text: "At the beginning of combat, choose a creature you control. It gains undying until the end of combat." },
         { rarity: "Uncommon", name: "Adamant Will", text: "At the beginning of combat, choose a creature you control. It gains indestructible until the end of combat." },
@@ -467,27 +462,23 @@
         { rarity: "Uncommon", name: "Explorer's Expedition", text: "You may play an additional land on each of your turns." },
         { rarity: "Uncommon", name: "Commander's Call", text: "Reduce your commander cost by {2}." },
         { rarity: "Uncommon", name: "Mentor's Insight", text: "Whenever a creature enters the battlefield under your control, you may draw a card." },
-        { rarity: "Uncommon", name: "Savage Summoning", text: "Whenever a creature enters the battlefield under your control, you may pay {2} mana. If you do, it fights target creature." },
+        { rarity: "Uncommon", name: "Savage Summoning", text: "Whenever a creature enters the battlefield under your control, you may pay {2} to have it fight target creature." },
         { rarity: "Uncommon", name: "Beastmaster's Call", text: "At the beginning of your end step, create a 3/3 beast token." },
         { rarity: "Uncommon", name: "Library of Abundance", text: "You have no maximum hand size." },
         { rarity: "Uncommon", name: "Chromatic Nexus", text: "Lands that produce mana have '{Tap}: Add one mana of any color.'" },
-        { rarity: "Uncommon", name: "Prismatic Oasis", text: "'{Tap}: Add one mana of any color in your commander’s color identity." },
-
-        // Rare (6)
+        { rarity: "Uncommon", name: "Prismatic Oasis", text: "{Tap}: Add one mana of any color in your commander’s color identity." },
         { rarity: "Rare", name: "Soothing Revelation", text: "If you would draw a card, instead draw two cards and gain 2 life." },
         { rarity: "Rare", name: "Fortune's Favor", text: "At the beginning of your first main phase, gain 1 life for each card in your hand." },
         { rarity: "Rare", name: "Enhanced Loyalty", text: "You may activate a planeswalker ability you control an additional time each turn." },
         { rarity: "Rare", name: "Tome of Wisdom", text: "At the beginning of your upkeep, you may draw a card." },
         { rarity: "Rare", name: "Ancient Insignia", text: "Reduce your commander’s cost by {3}." },
         { rarity: "Rare", name: "Grimoire of Necromancy", text: "You may cast instant and sorcery cards from your graveyard. If a card cast this way would be put into your graveyard, exile it instead." },
-
-        // Mythic (3)
         { rarity: "Mythic", name: "Apex Commanders", text: "Commanders you control have hexproof, indestructible and lifelink." },
         { rarity: "Mythic", name: "Mana Breaker's Charm", text: "The first spell you cast each turn costs no colorless mana." },
         { rarity: "Mythic", name: "Unwavering Presence", text: "Untap all permanents you control during each other player’s untap step." }
     ];
 
-    // --- EXPERIMENTAL BOSS POOL DATA (5 Cards Each) ---
+    // --- BOSS POOL DATA (5 Cards Each) ---
     const bossBoonsPool = {
         rona: [
             { rarity: "Common", name: "Faithful Zeal", text: "Whenever you sacrifice a nonland permanent, target creature gets +1/+1 until end of turn." },
@@ -512,21 +503,32 @@
         ]
     };
 
+    // --- GAUNTLET CAMPAIGN FLOWS ---
+    const gauntletFlows = {
+        sheoldred: ["rona", "ertai", "sheoldred"]
+    };
+
     let activeDeck = [];
     let activeBoonsList = [];
     let currentlyDrawnBoons = [];
-    let injectedBosses = []; // Track which bosses have had their rewards added
+    let injectedBosses = []; 
+    let pendingAdvance = false;
 
+    let currentCampaign = [];
+    let currentBossIndex = 0;
+    
     let currentTurn = 1;
     let monsterHp = 0;
     let currentMode = "standard";
     let currentDifficulty = "easy";
     let currentBoss = "rona";
+    let playerCount = 4;
+    
     let blights = { rona: 0, ertai: 0, sheoldred: 0 };
     let historyStack = [];
     const music = document.getElementById("bg-music");
 
-    // --- GAME LOGIC ---
+    // --- SYSTEM LOGIC ---
 
     function toggleMode() {
         const mode = document.getElementById("gameMode").value;
@@ -561,55 +563,39 @@
     }
 
     function startGame() {
-        const mode = document.getElementById("gameMode").value;
-        const count = parseInt(document.getElementById("players").value);
-        currentMode = mode;
+        currentMode = document.getElementById("gameMode").value;
+        playerCount = parseInt(document.getElementById("players").value);
         
         document.getElementById("static-abilities-box").style.display = "none";
         document.getElementById("gauntlet-tracker-box").style.display = "none";
 
-        if (mode === "standard") {
+        if (currentMode === "standard") {
             currentDifficulty = document.getElementById("difficulty").value;
-            if (currentDifficulty === "easy") monsterHp = count * 20;
-            else if (currentDifficulty === "baseline") monsterHp = count * 30;
-            else if (currentDifficulty === "hard") monsterHp = count * 50;
+            if (currentDifficulty === "easy") monsterHp = playerCount * 20;
+            else if (currentDifficulty === "baseline") monsterHp = playerCount * 30;
+            else if (currentDifficulty === "hard") monsterHp = playerCount * 50;
+            
+            document.getElementById("combat-tracker-header").innerText = "Combat Tracker";
         } else {
-            currentBoss = document.getElementById("gauntletBoss").value;
+            const campaignKey = document.getElementById("gauntletCampaign").value;
+            currentCampaign = gauntletFlows[campaignKey];
+            currentBossIndex = 0;
+            
+            // Fresh Deck & Cleared Board for a new Run
+            activeDeck = shuffle([...basicBoons]);
+            activeBoonsList = [];
+            blights = { rona: 0, ertai: 0, sheoldred: 0 };
+            injectedBosses = [];
+            pendingAdvance = false;
+
             document.getElementById("static-abilities-box").style.display = "block";
             document.getElementById("gauntlet-tracker-box").style.display = "flex";
             
-            // Generate full fresh deck and clear boons IF starting completely fresh run
-            if(activeDeck.length === 0 && activeBoonsList.length === 0) {
-                activeDeck = shuffle([...basicBoons]);
-                blights = { rona: 0, ertai: 0, sheoldred: 0 };
-                injectedBosses = [];
-            }
-            
-            // Adjust Button text dynamically based on selected boss context
-            const injectBtn = document.getElementById("inject-boons-btn");
-            injectBtn.innerText = `⚔️ Shuffle ${currentBoss.toUpperCase()}'s Boons Into Pool`;
-            if (injectedBosses.includes(currentBoss)) {
-                injectBtn.disabled = true;
-                injectBtn.innerText = `✅ ${currentBoss.toUpperCase()}'s Boons Shuffled`;
-            } else {
-                injectBtn.disabled = false;
-            }
-
             updateBlightDisplays();
             renderActiveBoons();
             updateDeckCount();
             
-            const staticText = document.getElementById("static-abilities-text");
-            if (currentBoss === "rona") {
-                monsterHp = count * 20;
-                staticText.innerHTML = "<strong>Rona, Sheoldred's Faithful:</strong> Whenever a player casts an instant or sorcery spell, each player (except Rona) loses 2 life.";
-            } else if (currentBoss === "ertai") {
-                monsterHp = count * 25;
-                staticText.innerHTML = "<strong>Ertai Resurrected:</strong> Counter the first creature spell, triggered ability or activated ability each turn unless you sacrifice a creature, discard a card or lose 5 life.";
-            } else if (currentBoss === "sheoldred") {
-                monsterHp = count * 30;
-                staticText.innerHTML = "<strong>Sheoldred, The Apocalypse:</strong><br>• Whenever an opponent draws a card, they lose 2 life.<br>• No Mercy - Whenever a creature deals damage to you, destroy it.";
-            }
+            loadBossData(currentCampaign[currentBossIndex]);
         }
 
         document.getElementById("hp-display").innerText = monsterHp;
@@ -618,30 +604,81 @@
         saveState();
     }
 
-    // --- ADVANCED DECK EVOLUTION LOGIC ---
+    function loadBossData(bossKey, resetState = true) {
+        currentBoss = bossKey;
+        
+        const staticText = document.getElementById("static-abilities-text");
+        let bossDisplayName = "";
 
-    function injectBossBoons() {
-        if (injectedBosses.includes(currentBoss)) return;
+        if (bossKey === "rona") {
+            bossDisplayName = "Rona";
+            if(resetState) { monsterHp = playerCount * 20; currentTurn = 1; }
+            staticText.innerHTML = "<strong>Rona, Sheoldred's Faithful:</strong> Whenever a player casts an instant or sorcery spell, each player (except Rona) loses 2 life.";
+        } else if (bossKey === "ertai") {
+            bossDisplayName = "Ertai";
+            if(resetState) { monsterHp = playerCount * 25; currentTurn = 1; }
+            staticText.innerHTML = "<strong>Ertai Resurrected:</strong> Counter the first creature spell, triggered ability or activated ability each turn unless you sacrifice a creature, discard a card or lose 5 life.";
+        } else if (bossKey === "sheoldred") {
+            bossDisplayName = "Sheoldred";
+            if(resetState) { monsterHp = playerCount * 30; currentTurn = 1; }
+            staticText.innerHTML = "<strong>Sheoldred, The Apocalypse:</strong><br>• Whenever an opponent draws a card, they lose 2 life.<br>• No Mercy - Whenever a creature deals damage to you, destroy it.";
+        }
+
+        document.getElementById("combat-tracker-header").innerText = `Combat Tracker - ${bossDisplayName} (${currentBossIndex + 1}/${currentCampaign.length})`;
         
-        saveState();
-        const pool = bossBoonsPool[currentBoss];
-        activeDeck.push(...pool);
-        activeDeck = shuffle(activeDeck);
-        injectedBosses.push(currentBoss);
-        
-        const injectBtn = document.getElementById("inject-boons-btn");
-        injectBtn.disabled = true;
-        injectBtn.innerText = `✅ ${currentBoss.toUpperCase()}'s Boons Shuffled`;
-        
-        updateDeckCount();
-        
-        // Output clean message to the log tracker
-        const logBox = document.getElementById("action-log");
-        logBox.innerHTML = `<div class="log-entry" style="color: #218c74; font-weight: bold;">🧬 Unlocked rewards! Added 5 premium ${currentBoss.toUpperCase()} boons into the deck pool and reshuffled.</div>` + logBox.innerHTML;
+        if (resetState) {
+            document.getElementById("turn-display").innerText = currentTurn;
+            document.getElementById("hp-display").innerText = monsterHp;
+            document.getElementById("action-btn").innerText = "Advance to Turn 2";
+            document.getElementById("action-btn").disabled = false;
+        }
+
+        updateAdvanceButtonUI();
     }
 
-    function updateDeckCount() {
-        document.getElementById("deck-count-display").innerText = activeDeck.length;
+    function updateAdvanceButtonUI() {
+        const btn = document.getElementById("btn-advance-boss");
+        if(currentMode !== "gauntlet") return;
+
+        if (currentBossIndex === currentCampaign.length - 1) {
+            btn.className = "btn-victory";
+            btn.innerText = "🏆 Defeat General & Win Gauntlet!";
+        } else {
+            btn.className = "btn-advance-boss";
+            btn.innerText = "⚔️ Defeat Lieutenant & Advance";
+        }
+    }
+
+    // --- CAMPAIGN PROGRESSION LOGIC ---
+
+    function defeatLieutenantAndAdvance() {
+        if(currentMode !== "gauntlet") return;
+
+        // Check if final boss (Victory)
+        if(currentBossIndex === currentCampaign.length - 1) {
+            const logBox = document.getElementById("action-log");
+            logBox.innerHTML = `<div class="log-entry" style="color: #ffaa00; font-weight: bold; font-size: 18px; text-align: center;">🏆 GAUNTLET COMPLETE! YOU SURVIVED!</div>` + logBox.innerHTML;
+            alert("Congratulations! You have defeated the General and survived the Gauntlet!");
+            return;
+        }
+
+        saveState();
+
+        // 1. Inject current boss boons into deck if not already done
+        if (!injectedBosses.includes(currentBoss)) {
+            const pool = bossBoonsPool[currentBoss];
+            activeDeck.push(...pool);
+            activeDeck = shuffle(activeDeck);
+            injectedBosses.push(currentBoss);
+            updateDeckCount();
+            
+            const logBox = document.getElementById("action-log");
+            logBox.innerHTML = `<div class="log-entry" style="color: #218c74; font-weight: bold;">🧬 Unlocked rewards! Added 5 premium ${currentBoss.toUpperCase()} boons into the deck pool.</div>` + logBox.innerHTML;
+        }
+
+        // 2. Trigger Boon Draw
+        pendingAdvance = true;
+        drawBoons();
     }
 
     function drawBoons() {
@@ -676,6 +713,16 @@
         document.getElementById("boonModal").style.display = "none";
         renderActiveBoons();
         updateDeckCount();
+        
+        if(pendingAdvance) {
+            pendingAdvance = false;
+            
+            currentBossIndex++;
+            loadBossData(currentCampaign[currentBossIndex], true);
+            
+            const logBox = document.getElementById("action-log");
+            logBox.innerHTML = `<div class="log-entry" style="color: #0984e3; font-weight: bold;">➡️ Advanced to next encounter: ${currentCampaign[currentBossIndex].toUpperCase()}! Boons and Blights carry over.</div>` + logBox.innerHTML;
+        }
         saveState();
     }
 
@@ -697,6 +744,10 @@
         });
     }
 
+    function updateDeckCount() {
+        document.getElementById("deck-count-display").innerText = activeDeck.length;
+    }
+
     function adjustBlight(boss, amount) {
         saveState();
         blights[boss] = Math.max(0, blights[boss] + amount);
@@ -715,6 +766,9 @@
         historyStack.push({
             turn: currentTurn,
             hp: monsterHp,
+            bossIndex: currentBossIndex,
+            boss: currentBoss,
+            pendingAdvance: pendingAdvance,
             blightsState: { ...blights },
             activeBoonsBackup: [...activeBoonsList],
             deckBackup: [...activeDeck],
@@ -731,25 +785,21 @@
         
         currentTurn = prev.turn;
         monsterHp = prev.hp;
+        currentBossIndex = prev.bossIndex;
+        pendingAdvance = prev.pendingAdvance;
+        
         blights = { ...prev.blightsState };
         activeBoonsList = [...prev.activeBoonsBackup];
         activeDeck = [...prev.deckBackup];
         injectedBosses = [...prev.injectedBackup];
+        
+        loadBossData(prev.boss, false); 
         
         document.getElementById("turn-display").innerText = currentTurn;
         document.getElementById("hp-display").innerText = monsterHp;
         updateBlightDisplays();
         renderActiveBoons();
         updateDeckCount();
-        
-        const injectBtn = document.getElementById("inject-boons-btn");
-        if (injectedBosses.includes(currentBoss)) {
-            injectBtn.disabled = true;
-            injectBtn.innerText = `✅ ${currentBoss.toUpperCase()}'s Boons Shuffled`;
-        } else {
-            injectBtn.disabled = false;
-            injectBtn.innerText = `⚔img Shuffle ${currentBoss.toUpperCase()}'s Boons Into Pool`;
-        }
 
         document.getElementById("action-log").innerHTML = prev.logHTML;
         document.getElementById("action-btn").innerText = prev.btnText;

@@ -14,7 +14,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 700px;
+            max-width: 750px;
             margin: 0 auto;
             background-color: #2a2a2a;
             padding: 20px;
@@ -116,21 +116,49 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            max-height: 250px;
+            max-height: 320px;
             overflow-y: auto;
         }
         .boon-item {
             background-color: #2a2a2a;
-            padding: 8px;
+            padding: 10px;
             border-left: 4px solid #218c74;
             border-radius: 4px;
             font-size: 13px;
+            position: relative;
+            transition: opacity 0.2s, background-color 0.2s;
+        }
+        .boon-item.exhausted {
+            opacity: 0.35;
+            background-color: #1a1a1a;
+            border-left-color: #555;
+            text-decoration: line-through;
+        }
+        .boon-header-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 4px;
         }
         .boon-title { font-weight: bold; color: #218c74; }
+        .boon-item.exhausted .boon-title { color: #888; }
+        
         .rarity-common { color: #ccc; }
         .rarity-uncommon { color: #74b9ff; }
         .rarity-rare { color: #fdcb6e; }
         .rarity-mythic { color: #ff7675; }
+
+        .btn-exhaust {
+            background-color: #444;
+            font-size: 10px;
+            padding: 2px 6px;
+            margin: 0;
+            border-radius: 3px;
+            font-weight: normal;
+        }
+        .btn-exhaust.active-toggle {
+            background-color: #218c74;
+        }
 
         /* Blight Styling */
         .blight-item {
@@ -185,7 +213,7 @@
             background-color: #111;
             padding: 15px;
             border-radius: 8px;
-            height: 250px;
+            height: 220px;
             overflow-y: auto;
             text-align: left;
             margin-top: 20px;
@@ -259,7 +287,7 @@
         
         <hr style="border: 1px solid #444; margin: 15px 0;">
         <h3 style="color: #ff5555; margin-bottom: 5px;">Gauntlet Mode Extras</h3>
-        <p style="font-size: 14px;"><strong>Boons:</strong> You draw and choose 1 Boon after defeating a Lieutenant. Boons act like emblems for the rest of the Gauntlet run.</p>
+        <p style="font-size: 14px;"><strong>Boons:</strong> You draw and choose 1 Boon after defeating a Lieutenant. Boons act like emblems for the rest of the Gauntlet run. Some boons have active abilities that can be exhausted per match.</p>
         <p style="font-size: 14px;"><strong>Blights:</strong> When a blight effect is rolled, slip a Blight Token into the sleeve of the top card of your deck. When drawn, resolve the Blight immediately. Pay {3} to cleanse it and cast the card for free. A card remains blighted across zones and between bosses until cleansed.</p>
         
         <h4 style="color: #ffaa00; margin-bottom: 5px;">Blight Token Reference:</h4>
@@ -478,7 +506,7 @@
         { rarity: "Mythic", name: "Unwavering Presence", text: "Untap all permanents you control during each other player’s untap step." }
     ];
 
-    // --- BOSS POOL DATA (5 Cards Each) ---
+    // --- BOSS POOL DATA ---
     const bossBoonsPool = {
         rona: [
             { rarity: "Common", name: "Faithful Zeal", text: "Whenever you sacrifice a nonland permanent, target creature gets +1/+1 until end of turn." },
@@ -503,13 +531,10 @@
         ]
     };
 
-    // --- GAUNTLET CAMPAIGN FLOWS ---
-    const gauntletFlows = {
-        sheoldred: ["rona", "ertai", "sheoldred"]
-    };
+    const gauntletFlows = { sheoldred: ["rona", "ertai", "sheoldred"] };
 
     let activeDeck = [];
-    let activeBoonsList = [];
+    let activeBoonsList = []; // Array of objects: { rarity, name, text, exhausted: false }
     let currentlyDrawnBoons = [];
     let injectedBosses = []; 
     let pendingAdvance = false;
@@ -574,15 +599,13 @@
             if (currentDifficulty === "easy") monsterHp = playerCount * 20;
             else if (currentDifficulty === "baseline") monsterHp = playerCount * 30;
             else if (currentDifficulty === "hard") monsterHp = playerCount * 50;
-            
             document.getElementById("combat-tracker-header").innerText = "Combat Tracker";
         } else {
             const campaignKey = document.getElementById("gauntletCampaign").value;
             currentCampaign = gauntletFlows[campaignKey];
             currentBossIndex = 0;
             
-            // Fresh Deck & Cleared Board for a new Run
-            activeDeck = shuffle([...basicBoons]);
+            activeDeck = shuffle(basicBoons.map(b => ({...b})));
             activeBoonsList = [];
             blights = { rona: 0, ertai: 0, sheoldred: 0 };
             injectedBosses = [];
@@ -606,7 +629,6 @@
 
     function loadBossData(bossKey, resetState = true) {
         currentBoss = bossKey;
-        
         const staticText = document.getElementById("static-abilities-text");
         let bossDisplayName = "";
 
@@ -632,7 +654,6 @@
             document.getElementById("action-btn").innerText = "Advance to Turn 2";
             document.getElementById("action-btn").disabled = false;
         }
-
         updateAdvanceButtonUI();
     }
 
@@ -654,7 +675,6 @@
     function defeatLieutenantAndAdvance() {
         if(currentMode !== "gauntlet") return;
 
-        // Check if final boss (Victory)
         if(currentBossIndex === currentCampaign.length - 1) {
             const logBox = document.getElementById("action-log");
             logBox.innerHTML = `<div class="log-entry" style="color: #ffaa00; font-weight: bold; font-size: 18px; text-align: center;">🏆 GAUNTLET COMPLETE! YOU SURVIVED!</div>` + logBox.innerHTML;
@@ -664,9 +684,8 @@
 
         saveState();
 
-        // 1. Inject current boss boons into deck if not already done
         if (!injectedBosses.includes(currentBoss)) {
-            const pool = bossBoonsPool[currentBoss];
+            const pool = bossBoonsPool[currentBoss].map(b => ({...b}));
             activeDeck.push(...pool);
             activeDeck = shuffle(activeDeck);
             injectedBosses.push(currentBoss);
@@ -676,14 +695,16 @@
             logBox.innerHTML = `<div class="log-entry" style="color: #218c74; font-weight: bold;">🧬 Unlocked rewards! Added 5 premium ${currentBoss.toUpperCase()} boons into the deck pool.</div>` + logBox.innerHTML;
         }
 
-        // 2. Trigger Boon Draw
+        // AUTOMATION TASK: Untap/ready all existing boons cleanly for the upcoming match
+        activeBoonsList.forEach(boon => boon.exhausted = false);
+
         pendingAdvance = true;
         drawBoons();
     }
 
     function drawBoons() {
         if(activeDeck.length < 3) {
-            alert("Not enough boons left in the deck pool!");
+            alert("Not enough boons left in the pool!");
             return;
         }
         
@@ -700,12 +721,15 @@
                 </div>
             `;
         });
-        
         document.getElementById("boonModal").style.display = "block";
     }
 
     function selectBoon(index) {
-        activeBoonsList.push(currentlyDrawnBoons[index]);
+        let pickedBoon = currentlyDrawnBoons[index];
+        pickedBoon.exhausted = false; // Initialize state tracking element
+        
+        activeBoonsList.push(pickedBoon);
+        
         const unselected = currentlyDrawnBoons.filter((_, i) => i !== index);
         activeDeck.push(...unselected);
         activeDeck = shuffle(activeDeck);
@@ -716,16 +740,16 @@
         
         if(pendingAdvance) {
             pendingAdvance = false;
-            
             currentBossIndex++;
             loadBossData(currentCampaign[currentBossIndex], true);
             
             const logBox = document.getElementById("action-log");
-            logBox.innerHTML = `<div class="log-entry" style="color: #0984e3; font-weight: bold;">➡️ Advanced to next encounter: ${currentCampaign[currentBossIndex].toUpperCase()}! Boons and Blights carry over.</div>` + logBox.innerHTML;
+            logBox.innerHTML = `<div class="log-entry" style="color: #0984e3; font-weight: bold;">➡️ Advanced to next encounter: ${currentCampaign[currentBossIndex].toUpperCase()}! All boons readied.</div>` + logBox.innerHTML;
         }
         saveState();
     }
 
+    // --- NEW: INTERACTABLE CONTROL BOARD UI RENDERING ---
     function renderActiveBoons() {
         const container = document.getElementById("active-boons-container");
         if (activeBoonsList.length === 0) {
@@ -733,15 +757,28 @@
             return;
         }
         container.innerHTML = "";
-        activeBoonsList.forEach(boon => {
+        activeBoonsList.forEach((boon, index) => {
             const cssClass = "rarity-" + boon.rarity.toLowerCase();
+            const stateClass = boon.exhausted ? "exhausted" : "";
+            const toggleLabel = boon.exhausted ? "🔄 Ready" : "💤 Exhaust";
+            const currentToggleStyle = boon.exhausted ? "" : "active-toggle";
+            
             container.innerHTML += `
-                <div class="boon-item">
-                    <span class="boon-title ${cssClass}">[${boon.rarity}] ${boon.name}:</span>
+                <div class="boon-item ${stateClass}">
+                    <div class="boon-header-line">
+                        <span class="boon-title ${cssClass}">[${boon.rarity}] ${boon.name}</span>
+                        <button class="btn-exhaust ${currentToggleStyle}" onclick="toggleBoonState(${index})">${toggleLabel}</button>
+                    </div>
                     <span>${boon.text}</span>
                 </div>
             `;
         });
+    }
+
+    function toggleBoonState(index) {
+        saveState();
+        activeBoonsList[index].exhausted = !activeBoonsList[index].exhausted;
+        renderActiveBoons();
     }
 
     function updateDeckCount() {
@@ -763,6 +800,10 @@
     // --- ENCOUNTER LOGIC ---
 
     function saveState() {
+        // Deep copy of boon structures to fully preserve active toggles on undo states
+        const activeCopy = activeBoonsList.map(b => ({...b}));
+        const deckCopy = activeDeck.map(b => ({...b}));
+        
         historyStack.push({
             turn: currentTurn,
             hp: monsterHp,
@@ -770,8 +811,8 @@
             boss: currentBoss,
             pendingAdvance: pendingAdvance,
             blightsState: { ...blights },
-            activeBoonsBackup: [...activeBoonsList],
-            deckBackup: [...activeDeck],
+            activeBoonsBackup: activeCopy,
+            deckBackup: deckCopy,
             injectedBackup: [...injectedBosses],
             logHTML: document.getElementById("action-log").innerHTML,
             btnText: document.getElementById("action-btn").innerText
@@ -789,8 +830,8 @@
         pendingAdvance = prev.pendingAdvance;
         
         blights = { ...prev.blightsState };
-        activeBoonsList = [...prev.activeBoonsBackup];
-        activeDeck = [...prev.deckBackup];
+        activeBoonsList = prev.activeBoonsBackup.map(b => ({...b}));
+        activeDeck = prev.deckBackup.map(b => ({...b}));
         injectedBosses = [...prev.injectedBackup];
         
         loadBossData(prev.boss, false); 
@@ -909,7 +950,7 @@
             if (diff === "hard") {
                 if (roll === 1) return `Annihilator ${DR}. Skip draw, main, or combat phase this turn.`;
                 if (roll === 2) return "Each opponent sacrifices 1 legendary permanent and all creatures.";
-                if (roll === 3) return "Destroy highest CMC legendary. If not destroyed, discard a card.";
+                { if (roll === 3) return "Destroy highest CMC legendary. If not destroyed, discard a card."; }
                 if (roll <= 5) return "Monster deals 15 damage to each player and 8 damage to planeswalkers.";
                 if (roll <= 7) return "The Raid Monster gains 15 life and removes all infect counters.";
                 if (roll <= 9) return "Opponents can't draw more than 1 card or play more than one spell until next turn.";

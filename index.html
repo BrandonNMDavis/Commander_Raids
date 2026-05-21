@@ -46,6 +46,16 @@
             border: 1px solid #444;
         }
 
+        select, input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 6px;
+            margin: 5px;
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+        }
+
         #game-screen { display: none; }
         .stats-box {
             display: flex;
@@ -56,6 +66,17 @@
             margin-bottom: 20px;
         }
         .stat { font-size: 20px; font-weight: bold; }
+
+        .static-abilities-box {
+            background-color: #3b2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+            border: 1px solid #ff5555;
+            font-size: 14px;
+            line-height: 1.4;
+        }
         
         #hp-display { transition: color 0.2s; }
         .damage-pulse { color: #ff0000; animation: shake 0.3s; }
@@ -140,19 +161,49 @@
         <p><strong>Turn Structure:</strong> Monster goes last. Skips turn 1, rolls 1 die on turn 2, then adds 1 die every even turn.</p>
         <p><strong>Counters:</strong> Monster spells cannot be countered. Counterspells force a re-roll.</p>
         <p><strong>Immunity:</strong> Commander damage and "You win" effects do nothing.</p>
+        
+        <hr style="border: 1px solid #444; margin: 15px 0;">
+        <h3 style="color: #ff5555; margin-bottom: 5px;">Gauntlet Mode Extras</h3>
+        <p style="font-size: 14px;"><strong>Blights:</strong> When a blight effect is rolled, slip a Blight Token into the sleeve of the top card of your deck. When drawn, resolve the Blight immediately. Pay {3} to cleanse it and cast the card for free.</p>
+        <p style="font-size: 14px;"><strong>Boons:</strong> You draw and choose 1 Boon after defeating a Lieutenant. Boons act like emblems for the rest of the Gauntlet run.</p>
     </div>
 </div>
 
 <div class="container" id="setup-screen">
     <h1>Commander Raids</h1>
-    <p>Select difficulty and players.</p>
-    <select id="difficulty">
-        <option value="easy">Easy (20 HP per player)</option>
-        <option value="baseline">Baseline (30 HP per player)</option>
-        <option value="hard">Hard (50 HP per player)</option>
-    </select>
-    <input type="number" id="players" value="4" min="1">
-    <button onclick="startGame()">Start Raid</button>
+    
+    <div style="margin-bottom: 15px;">
+        <label style="font-weight: bold; color: #ffaa00; display: block;">Game Mode:</label>
+        <select id="gameMode" onchange="toggleMode()" style="width: 80%; max-width: 300px;">
+            <option value="standard">Standard Mode</option>
+            <option value="gauntlet">Gauntlet Mode</option>
+        </select>
+    </div>
+
+    <div id="standard-options">
+        <label style="display: block;">Difficulty:</label>
+        <select id="difficulty" style="width: 80%; max-width: 300px;">
+            <option value="easy">Easy (20 HP per player)</option>
+            <option value="baseline">Baseline (30 HP per player)</option>
+            <option value="hard">Hard (50 HP per player)</option>
+        </select>
+    </div>
+
+    <div id="gauntlet-options" style="display: none;">
+        <label style="display: block;">Gauntlet Boss:</label>
+        <select id="gauntletBoss" style="width: 80%; max-width: 300px;">
+            <option value="rona">1. Rona, Sheoldred's Faithful (20 HP)</option>
+            <option value="ertai">2. Ertai Resurrected (25 HP)</option>
+            <option value="sheoldred">3. Sheoldred, the Apocalypse (30 HP)</option>
+        </select>
+    </div>
+
+    <div style="margin-top: 15px;">
+        <label>Players:</label>
+        <input type="number" id="players" value="4" min="1" style="width: 60px;">
+    </div>
+    
+    <button onclick="startGame()" style="margin-top: 20px;">Start Raid</button>
     
     <div class="audio-controls">
         <p style="margin-top: 0; font-size: 14px; color: #aaa;">Atmospheric Loop (DnB/Jungle Style)</p>
@@ -166,10 +217,10 @@
 
     <div class="attribution">
         Format created by <strong>Cardboard Odysseys</strong>.<br>
-        <a href="https://docs.google.com/document/d/1mJ7J9D7mtmXVKVu_Glc0JekXbOOHAvey42NB5B7oqfc/edit?tab=t.0" target="_blank">Original Rules Document</a> | <a href="https://www.youtube.com/@Cardboard_Odysseys" target="_blank">YouTube</a><br>
-        Contact: <a href="mailto:commanderraids@gmail.com">commanderraids@gmail.com</a> | <a href="https://discord.gg/sRZ738kbCs" target="_blank">Discord</a><br>
+        <a href="https://docs.google.com/document/d/1mJ7J9D7mtmXVKVu_Glc0JekXbOOHAvey42NB5B7oqfc/edit?tab=t.0" target="_blank">Original Rules Document</a> | <a href="https://www.youtube.com/@Cardboard_Odysseys" target="_blank">YouTube</a>.<br>
+        Contact: <a href="mailto:commanderraids@gmail.com">commanderraids@gmail.com</a> | <a href="https://discord.gg/sRZ738kbCs" target="_blank">Discord</a>.<br>
         <br>
-        <em>Developed with <a href="https://gemini.google/about/" target="_blank">Google Gemini</a></em>
+        <em>Developed with <a href="https://gemini.google/about/" target="_blank">Google Gemini</a>.</em>
     </div>
 </div>
 
@@ -182,6 +233,10 @@
     <div class="stats-box">
         <div class="stat">Turn: <span id="turn-display">1</span></div>
         <div class="stat">Monster HP: <span id="hp-display">0</span></div>
+    </div>
+
+    <div id="static-abilities-box" class="static-abilities-box" style="display: none;">
+        <span id="static-abilities-text"></span>
     </div>
 
     <button id="action-btn" onclick="takeMonsterTurn()">Advance to Turn 2</button>
@@ -202,9 +257,22 @@
 <script>
     let currentTurn = 1;
     let monsterHp = 0;
+    let currentMode = "standard";
     let currentDifficulty = "easy";
+    let currentBoss = "rona";
     let historyStack = [];
     const music = document.getElementById("bg-music");
+
+    function toggleMode() {
+        const mode = document.getElementById("gameMode").value;
+        if (mode === "standard") {
+            document.getElementById("standard-options").style.display = "block";
+            document.getElementById("gauntlet-options").style.display = "none";
+        } else {
+            document.getElementById("standard-options").style.display = "none";
+            document.getElementById("gauntlet-options").style.display = "block";
+        }
+    }
 
     function toggleMusic() {
         const btn = document.getElementById("music-btn");
@@ -218,12 +286,34 @@
     }
 
     function startGame() {
-        const diff = document.getElementById("difficulty").value;
+        const mode = document.getElementById("gameMode").value;
         const count = parseInt(document.getElementById("players").value);
-        currentDifficulty = diff;
-        if (diff === "easy") monsterHp = count * 20;
-        else if (diff === "baseline") monsterHp = count * 30;
-        else if (diff === "hard") monsterHp = count * 50;
+        currentMode = mode;
+        
+        document.getElementById("static-abilities-box").style.display = "none";
+
+        if (mode === "standard") {
+            currentDifficulty = document.getElementById("difficulty").value;
+            if (currentDifficulty === "easy") monsterHp = count * 20;
+            else if (currentDifficulty === "baseline") monsterHp = count * 30;
+            else if (currentDifficulty === "hard") monsterHp = count * 50;
+        } else {
+            currentBoss = document.getElementById("gauntletBoss").value;
+            document.getElementById("static-abilities-box").style.display = "block";
+            const staticText = document.getElementById("static-abilities-text");
+            
+            if (currentBoss === "rona") {
+                monsterHp = count * 20;
+                staticText.innerHTML = "<strong>Rona, Sheoldred's Faithful:</strong> Whenever a player casts an instant or sorcery spell, each player (except Rona) loses 2 life.";
+            } else if (currentBoss === "ertai") {
+                monsterHp = count * 25;
+                staticText.innerHTML = "<strong>Ertai Resurrected:</strong> Counter the first creature spell, triggered ability or activated ability each turn unless you sacrifice a creature, discard a card or lose 5 life.";
+            } else if (currentBoss === "sheoldred") {
+                monsterHp = count * 30;
+                staticText.innerHTML = "<strong>Sheoldred, The Apocalypse:</strong><br>• Whenever an opponent draws a card, they lose 2 life.<br>• No Mercy - Whenever a creature deals damage to you, destroy it.";
+            }
+        }
+
         document.getElementById("hp-display").innerText = monsterHp;
         document.getElementById("setup-screen").style.display = "none";
         document.getElementById("game-screen").style.display = "block";
@@ -273,7 +363,7 @@
     function rerollDie(elementId, DR) {
         const line = document.getElementById(elementId);
         const newRoll = Math.floor(Math.random() * 20) + 1;
-        const newAction = getMonsterAction(currentDifficulty, newRoll, DR);
+        const newAction = getMonsterAction(currentMode, currentDifficulty, currentBoss, newRoll, DR);
         line.innerHTML = `<span class="monster-action">🎲 ${newRoll}:</span> ${newAction} <button class="reroll-btn" onclick="rerollDie('${elementId}', ${DR})">🔄 Re-roll</button>`;
     }
 
@@ -293,7 +383,7 @@
             for (let i = 0; i < diceCount; i++) {
                 let roll = Math.floor(Math.random() * 20) + 1;
                 let dieId = `die-${Date.now()}-${i}`;
-                entryContent += `<div id="${dieId}"><span class="monster-action">🎲 ${roll}:</span> ${getMonsterAction(currentDifficulty, roll, diceCount)} <button class="reroll-btn" onclick="rerollDie('${dieId}', ${diceCount})">🔄 Re-roll</button></div>`;
+                entryContent += `<div id="${dieId}" style="margin-bottom: 6px;"><span class="monster-action">🎲 ${roll}:</span> ${getMonsterAction(currentMode, currentDifficulty, currentBoss, roll, diceCount)} <button class="reroll-btn" onclick="rerollDie('${dieId}', ${diceCount})">🔄 Re-roll</button></div>`;
             }
             document.getElementById(entryId).innerHTML = entryContent;
             btn.innerText = `Advance to Turn ${currentTurn + 1}`;
@@ -311,57 +401,95 @@
         document.getElementById("setup-screen").style.display = "block";
     }
 
-    function getMonsterAction(diff, roll, DR) {
-        if (diff === "easy") {
-            if (roll === 1) return "Each opponent discards 1 card, mills 1, and sacrifices a non-land.";
-            if (roll === 2) return `Each opponent sacrifices ${DR} creatures.`;
-            if (roll === 3) return "Each opponent destroys target legendary permanent of their choice.";
-            if (roll <= 5) return "Each opponent loses 5 life and deal 3 damage to planeswalkers.";
-            if (roll <= 7) return "The Raid Monster gains 5 life and removes 5 infect counters.";
-            if (roll <= 9) return "Players cannot draw more than 2 cards or play more than two spells until next monster turn.";
-            if (roll === 10) return "Each opponent sacrifices half the number of tokens they control.";
-            if (roll === 11) return "Each opponent destroys target enchantment of their choice.";
-            if (roll <= 13) return `Create two ${DR}/${DR} Fly/Deathtouch/Defender tokens. Creatures attack if able.`;
-            if (roll === 14) return "Each opponent sacrifices half the number of enchantments they control rounded up.";
-            if (roll === 15) return "Each opponent destroys target artifact of their choice.";
-            if (roll === 16) return "Each opponent sacrifices half the number of artifacts they control rounded up.";
-            if (roll === 17) return "Each opponent destroys target creature they own of their choice.";
-            if (roll <= 19) return `Exile half graveyard and drain ${DR} life.`;
-            return "Opponents may draw a card, play a land, and gain 5 life.";
-        }
-        if (diff === "baseline") {
-            if (roll === 1) return "Discard 2, Mill 2, sacrifice 1 legendary, 1 enchantment, and 1 artifact.";
-            if (roll === 2) return "Each opponent sacrifices all creatures.";
-            if (roll === 3) return "Destroy target legendary permanent with the highest mana cost.";
-            if (roll <= 5) return "Monster deals 10 damage to each opponent and 5 damage to planeswalkers.";
-            if (roll <= 7) return "The Raid Monster gains 10 life and removes 7 infect counters.";
-            if (roll <= 9) return "Opponents cannot draw more than 1 card or play more than one spell until next turn.";
-            if (roll === 10) return "Each opponent sacrifices all tokens.";
-            if (roll === 11) return "Destroy target enchantment with the highest mana cost.";
-            if (roll <= 13) return `Create 1+${DR} ${DR}/${DR} Fly/Deathtouch/Defender tokens. Creatures attack if able.`;
-            if (roll === 14) return "Each opponent sacrifices all enchantments.";
-            if (roll === 15) return "Destroy target artifact with the highest mana cost.";
-            if (roll === 16) return "Each opponent sacrifices all artifacts.";
-            if (roll === 17) return "Destroy target creature with the highest mana cost.";
-            if (roll <= 19) return `Exile graveyard and drain 1+${DR} life.`;
-            return "Opponent draws a card OR places a land OR gains 5 life.";
-        }
-        if (diff === "hard") {
-            if (roll === 1) return `Annihilator ${DR}. Skip draw, main, or combat phase this turn.`;
-            if (roll === 2) return "Each opponent sacrifices 1 legendary permanent and all creatures.";
-            if (roll === 3) return "Destroy highest CMC legendary. If not destroyed, discard a card.";
-            if (roll <= 5) return "Monster deals 15 damage to each player and 8 damage to planeswalkers.";
-            if (roll <= 7) return "The Raid Monster gains 15 life and removes all infect counters.";
-            if (roll <= 9) return "Opponents can't draw more than 1 card or play more than one spell until next turn.";
-            if (roll === 10) return "Each opponent sacrifices all tokens and loses 1 life for each sacrificed.";
-            if (roll === 11) return "Destroy highest CMC enchantment. If not destroyed, lose 5 life.";
-            if (roll <= 13) return `Create 2+${DR} ${DR}/${DR} Fly/Deathtouch/Defender tokens. Creatures attack if able.`;
-            if (roll === 14) return "Each opponent sacrifices all enchantments and loses 2 life for each.";
-            if (roll === 15) return "Destroy highest CMC artifact. If not destroyed, return a land to hand.";
-            if (roll === 16) return "Each opponent sacrifices all artifacts and loses 2 life for each.";
-            if (roll === 17) return "Destroy highest CMC creature and tap others (no untap next step).";
-            if (roll <= 19) return `Discard 2, Mill 2, exile graveyard, drain 2x${DR} life.`;
-            return "Return all nonland permanents you don't control to their owner's hand.";
+    function getMonsterAction(mode, diff, boss, roll, DR) {
+        if (mode === "standard") {
+            if (diff === "easy") {
+                if (roll === 1) return "Each opponent discards 1 card, mills 1, and sacrifices a non-land.";
+                if (roll === 2) return `Each opponent sacrifices ${DR} creatures.`;
+                if (roll === 3) return "Each opponent destroys target legendary permanent of their choice.";
+                if (roll <= 5) return "Each opponent loses 5 life and deal 3 damage to planeswalkers.";
+                if (roll <= 7) return "The Raid Monster gains 5 life and removes 5 infect counters.";
+                if (roll <= 9) return "Players cannot draw more than 2 cards or play more than two spells until next monster turn.";
+                if (roll === 10) return "Each opponent sacrifices half the number of tokens they control.";
+                if (roll === 11) return "Each opponent destroys target enchantment of their choice.";
+                if (roll <= 13) return `Create two ${DR}/${DR} Fly/Deathtouch/Defender tokens. Creatures attack if able.`;
+                if (roll === 14) return "Each opponent sacrifices half the number of enchantments they control rounded up.";
+                if (roll === 15) return "Each opponent destroys target artifact of their choice.";
+                if (roll === 16) return "Each opponent sacrifices half the number of artifacts they control rounded up.";
+                if (roll === 17) return "Each opponent destroys target creature they own of their choice.";
+                if (roll <= 19) return `Exile half graveyard and drain ${DR} life.`;
+                return "Opponents may draw a card, play a land, and gain 5 life.";
+            }
+            if (diff === "baseline") {
+                if (roll === 1) return "Discard 2, Mill 2, sacrifice 1 legendary, 1 enchantment, and 1 artifact.";
+                if (roll === 2) return "Each opponent sacrifices all creatures.";
+                if (roll === 3) return "Destroy target legendary permanent with the highest mana cost.";
+                if (roll <= 5) return "Monster deals 10 damage to each opponent and 5 damage to planeswalkers.";
+                if (roll <= 7) return "The Raid Monster gains 10 life and removes 7 infect counters.";
+                if (roll <= 9) return "Opponents cannot draw more than 1 card or play more than one spell until next turn.";
+                if (roll === 10) return "Each opponent sacrifices all tokens.";
+                if (roll === 11) return "Destroy target enchantment with the highest mana cost.";
+                if (roll <= 13) return `Create 1+${DR} ${DR}/${DR} Fly/Deathtouch/Defender tokens. Creatures attack if able.`;
+                if (roll === 14) return "Each opponent sacrifices all enchantments.";
+                if (roll === 15) return "Destroy target artifact with the highest mana cost.";
+                if (roll === 16) return "Each opponent sacrifices all artifacts.";
+                if (roll === 17) return "Destroy target creature with the highest mana cost.";
+                if (roll <= 19) return `Exile graveyard and drain 1+${DR} life.`;
+                return "Opponent draws a card OR places a land OR gains 5 life.";
+            }
+            if (diff === "hard") {
+                if (roll === 1) return `Annihilator ${DR}. Skip draw, main, or combat phase this turn.`;
+                if (roll === 2) return "Each opponent sacrifices 1 legendary permanent and all creatures.";
+                if (roll === 3) return "Destroy highest CMC legendary. If not destroyed, discard a card.";
+                if (roll <= 5) return "Monster deals 15 damage to each player and 8 damage to planeswalkers.";
+                if (roll <= 7) return "The Raid Monster gains 15 life and removes all infect counters.";
+                if (roll <= 9) return "Opponents can't draw more than 1 card or play more than one spell until next turn.";
+                if (roll === 10) return "Each opponent sacrifices all tokens and loses 1 life for each sacrificed.";
+                if (roll === 11) return "Destroy highest CMC enchantment. If not destroyed, lose 5 life.";
+                if (roll <= 13) return `Create 2+${DR} ${DR}/${DR} Fly/Deathtouch/Defender tokens. Creatures attack if able.`;
+                if (roll === 14) return "Each opponent sacrifices all enchantments and loses 2 life for each.";
+                if (roll === 15) return "Destroy highest CMC artifact. If not destroyed, return a land to hand.";
+                if (roll === 16) return "Each opponent sacrifices all artifacts and loses 2 life for each.";
+                if (roll === 17) return "Destroy highest CMC creature and tap others (no untap next step).";
+                if (roll <= 19) return `Discard 2, Mill 2, exile graveyard, drain 2x${DR} life.`;
+                return "Return all nonland permanents you don't control to their owner's hand.";
+            }
+        } else if (mode === "gauntlet") {
+            if (boss === "rona") {
+                if (roll <= 5) return `Creates 1x (${DR}/${DR}) Phyrexian Zombie with Infect/Defender for each opponent. "When this creature leaves the battlefield, the player that removes this creature blights the top card of their library."`;
+                if (roll <= 7) return "Destroys all opponents creatures with toughness 3 or less.";
+                if (roll <= 9) return "Each opponent discards 2 cards, then draws 1 card. Lose 2 life for each nonland card discarded this way.";
+                if (roll <= 11) return "Each opponent blights the top 2 cards of their library.";
+                if (roll <= 13) return "Destroys all enchantments with CMC 3 or less. Gains 3 life for each permanent destroyed this way.";
+                if (roll <= 15) return "Each opponent sacrifices an artifact they control. (If you can't, lose 5 life).";
+                if (roll <= 17) return "Gains life equal to the CMC of the first spell each opponent casts each turn until next monster turn. (Stacks if rolled multiple times).";
+                if (roll <= 19) return "Destroys all opponents creatures with toughness 4 or more.";
+                
+                let subRoll = Math.floor(Math.random() * 20) + 1;
+                return `<strong>Rolls on Sheoldred's Table (Gains 5 Life!):</strong> <br> - ${getMonsterAction("gauntlet", diff, "sheoldred", subRoll, DR)}`;
+            } else if (boss === "ertai") {
+                if (roll <= 5) return `Creates 1x (${DR}/${DR}) Compleated Goblin with First Strike/Defender for each opponent. "When this creature leaves the battlefield, the player blights the top card of their library and the goblin blows up, dealing 2 damage to each player."`;
+                if (roll <= 7) return "Destroys all opponents creatures with power 3 or less.";
+                if (roll <= 9) return "For each opponent, destroys target creature or planeswalker with highest CMC. Controller may draw a card.";
+                if (roll <= 11) return "Each opponent blights the top card of their library.";
+                if (roll <= 13) return "Destroys all enchantments with CMC 3 or more. Gains 3 life for each destroyed.";
+                if (roll <= 15) return "Destroys each target artifact in play. Gains 3 life for each destroyed.";
+                if (roll <= 17) return "Until next turn, Ertai can sacrifice a creature to counter the first target noncreature spell each turn.";
+                if (roll <= 19) return "Destroys all opponents creatures with power 4 or more.";
+                
+                let subRoll = Math.floor(Math.random() * 20) + 1;
+                return `<strong>Rolls on Sheoldred's Table (Gains 5 Life!):</strong> <br> - ${getMonsterAction("gauntlet", diff, "sheoldred", subRoll, DR)}`;
+            } else if (boss === "sheoldred") {
+                if (roll <= 5) return "Each player blights and Sheoldred gains 1 life for each card drawn from anyone until the beginning of her next turn.";
+                if (roll <= 7) return "Deals 5 damage to each player and gains 5 life.";
+                if (roll <= 9) return "Deals 1 damage to each opponent's creature in play; deathtouch applies.";
+                if (roll <= 11) return "Each player mills 5 cards off the top of their library and loses 1 life for each noncreature milled this way.";
+                if (roll <= 13) return "Each player blights two times and then draws a card.";
+                if (roll <= 15) return "Exile each player's graveyard, then each player draws a card.";
+                if (roll <= 17) return "Each player sacrifices a creature. If sacrificed, draw a card and discard a card. If you cannot sacrifice, draw 2, then discard 2 instead.";
+                if (roll <= 19) return "Each Player discards 2 cards and mills 3, each player loses 1 life per creature put into the graveyard this way.";
+                return "Gains 2 life for each card in each player's hand. (If a lieutenant cast this, they gain 1 life per card instead).";
+            }
         }
         return "Action roll.";
     }

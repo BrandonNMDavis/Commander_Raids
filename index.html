@@ -78,7 +78,7 @@
             line-height: 1.4;
         }
 
-        /* Upgraded Boon & Blight Tracker */
+        /* Upgraded Boon & Blight Tracker - MOBILE RESPONSIVE */
         .gauntlet-tracker-box {
             background-color: #1f1f1f;
             border: 1px solid #444;
@@ -93,6 +93,16 @@
         }
         .tracker-column:first-child {
             border-right: 1px solid #444;
+        }
+        
+        @media (max-width: 600px) {
+            .gauntlet-tracker-box {
+                flex-direction: column;
+            }
+            .tracker-column:first-child {
+                border-right: none;
+                border-bottom: 1px solid #444;
+            }
         }
         
         /* Boon Styling */
@@ -717,6 +727,7 @@
         document.getElementById("action-btn").innerText = "Advance to Turn 2";
         document.getElementById("game-screen").style.display = "none";
         document.getElementById("setup-screen").style.display = "block";
+        updateBlightDisplays();
     }
 
     function getMonsterAction(mode, diff, boss, roll, DR) {

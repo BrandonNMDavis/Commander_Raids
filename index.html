@@ -71,11 +71,53 @@
             background-color: #3b2a2a;
             padding: 15px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-align: left;
             border: 1px solid #ff5555;
             font-size: 14px;
             line-height: 1.4;
+        }
+
+        /* Boon and Blight Tracker Styling */
+        .gauntlet-tracker-box {
+            background-color: #1f1f1f;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .tracker-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .tracker-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .boon-text { color: #218c74; }
+        .blight-text { color: #ffaa00; }
+        .tracker-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-counter {
+            padding: 5px 12px;
+            font-size: 14px;
+            margin: 0;
+            border-radius: 4px;
+        }
+        .counter-val {
+            font-size: 22px;
+            font-weight: bold;
+            min-width: 25px;
         }
         
         #hp-display { transition: color 0.2s; }
@@ -239,6 +281,25 @@
         <span id="static-abilities-text"></span>
     </div>
 
+    <div id="gauntlet-tracker-box" class="gauntlet-tracker-box" style="display: none;">
+        <div class="tracker-column">
+            <span class="tracker-title boon-text">Active Boons</span>
+            <div class="tracker-controls">
+                <button class="btn-counter btn-undo" onclick="adjustBoon(-1)">-</button>
+                <span id="boon-display" class="counter-val">0</span>
+                <button class="btn-counter btn-heal" onclick="adjustBoon(1)">+</button>
+            </div>
+        </div>
+        <div class="tracker-column">
+            <span class="tracker-title blight-text">Active Blights</span>
+            <div class="tracker-controls">
+                <button class="btn-counter btn-undo" onclick="adjustBlight(-1)">-</button>
+                <span id="blight-display" class="counter-val">0</span>
+                <button class="btn-counter btn-damage" onclick="adjustBlight(1)">+</button>
+            </div>
+        </div>
+    </div>
+
     <button id="action-btn" onclick="takeMonsterTurn()">Advance to Turn 2</button>
     <button class="btn-undo" onclick="undoTurn()">Undo</button>
     
@@ -260,6 +321,8 @@
     let currentMode = "standard";
     let currentDifficulty = "easy";
     let currentBoss = "rona";
+    let boonsCount = 0;
+    let blightsCount = 0;
     let historyStack = [];
     const music = document.getElementById("bg-music");
 
@@ -285,12 +348,26 @@
         modal.style.display = (modal.style.display === "block") ? "none" : "block";
     }
 
+    // NEW: Counter Adjustment Functions
+    function adjustBoon(amount) {
+        saveState();
+        boonsCount = Math.max(0, boonsCount + amount);
+        document.getElementById("boon-display").innerText = boonsCount;
+    }
+
+    function adjustBlight(amount) {
+        saveState();
+        blightsCount = Math.max(0, blightsCount + amount);
+        document.getElementById("blight-display").innerText = blightsCount;
+    }
+
     function startGame() {
         const mode = document.getElementById("gameMode").value;
         const count = parseInt(document.getElementById("players").value);
         currentMode = mode;
         
         document.getElementById("static-abilities-box").style.display = "none";
+        document.getElementById("gauntlet-tracker-box").style.display = "none";
 
         if (mode === "standard") {
             currentDifficulty = document.getElementById("difficulty").value;
@@ -300,6 +377,14 @@
         } else {
             currentBoss = document.getElementById("gauntletBoss").value;
             document.getElementById("static-abilities-box").style.display = "block";
+            document.getElementById("gauntlet-tracker-box").style.display = "flex";
+            
+            // Reset counters on fresh start
+            boonsCount = 0;
+            blightsCount = 0;
+            document.getElementById("boon-display").innerText = boonsCount;
+            document.getElementById("blight-display").innerText = blightsCount;
+            
             const staticText = document.getElementById("static-abilities-text");
             
             if (currentBoss === "rona") {
@@ -324,6 +409,8 @@
         historyStack.push({
             turn: currentTurn,
             hp: monsterHp,
+            boons: boonsCount,
+            blights: blightsCount,
             logHTML: document.getElementById("action-log").innerHTML,
             btnText: document.getElementById("action-btn").innerText
         });
@@ -354,8 +441,13 @@
         const prev = historyStack[historyStack.length - 1];
         currentTurn = prev.turn;
         monsterHp = prev.hp;
+        boonsCount = prev.boons || 0;
+        blightsCount = prev.blights || 0;
+        
         document.getElementById("turn-display").innerText = currentTurn;
         document.getElementById("hp-display").innerText = monsterHp;
+        document.getElementById("boon-display").innerText = boonsCount;
+        document.getElementById("blight-display").innerText = blightsCount;
         document.getElementById("action-log").innerHTML = prev.logHTML;
         document.getElementById("action-btn").innerText = prev.btnText;
     }
@@ -394,6 +486,8 @@
     function restartRaid() {
         historyStack = [];
         currentTurn = 1;
+        boonsCount = 0;
+        blightsCount = 0;
         document.getElementById("turn-display").innerText = "1";
         document.getElementById("action-log").innerHTML = '<div class="log-entry">Encounter started. Good luck!</div>';
         document.getElementById("action-btn").innerText = "Advance to Turn 2";
@@ -456,19 +550,19 @@
             }
         } else if (mode === "gauntlet") {
             if (boss === "rona") {
-                if (roll <= 5) return `Creates 1x (${DR}/${DR}) Phyrexian Zombie with Infect/Defender for each opponent. "When this creature leaves the battlefield, the player that removes this creature blights the top card of their library."`;
+                if (roll <= 5) return `Creates 1x (${DR}/${DR}) Phyrexian Zombie with Infect/Defender for each opponent. When this creature leaves the battlefield, the player that removes it blights the top card of their library.`;
                 if (roll <= 7) return "Destroys all opponents creatures with toughness 3 or less.";
                 if (roll <= 9) return "Each opponent discards 2 cards, then draws 1 card. Lose 2 life for each nonland card discarded this way.";
                 if (roll <= 11) return "Each opponent blights the top 2 cards of their library.";
                 if (roll <= 13) return "Destroys all enchantments with CMC 3 or less. Gains 3 life for each permanent destroyed this way.";
                 if (roll <= 15) return "Each opponent sacrifices an artifact they control. (If you can't, lose 5 life).";
-                if (roll <= 17) return "Gains life equal to the CMC of the first spell each opponent casts each turn until next monster turn. (Stacks if rolled multiple times).";
+                if (roll <= 17) return "Gains life equal to the CMC of the first spell each opponent casts each turn until next monster turn.";
                 if (roll <= 19) return "Destroys all opponents creatures with toughness 4 or more.";
                 
                 let subRoll = Math.floor(Math.random() * 20) + 1;
                 return `<strong>Rolls on Sheoldred's Table (Gains 5 Life!):</strong> <br> - ${getMonsterAction("gauntlet", diff, "sheoldred", subRoll, DR)}`;
             } else if (boss === "ertai") {
-                if (roll <= 5) return `Creates 1x (${DR}/${DR}) Compleated Goblin with First Strike/Defender for each opponent. "When this creature leaves the battlefield, the player blights the top card of their library and the goblin blows up, dealing 2 damage to each player."`;
+                if (roll <= 5) return `Creates 1x (${DR}/${DR}) Compleated Goblin with First Strike/Defender for each opponent. When this creature leaves the battlefield, the player blights the top card of their library and the goblin deals 2 damage to each player.`;
                 if (roll <= 7) return "Destroys all opponents creatures with power 3 or less.";
                 if (roll <= 9) return "For each opponent, destroys target creature or planeswalker with highest CMC. Controller may draw a card.";
                 if (roll <= 11) return "Each opponent blights the top card of their library.";

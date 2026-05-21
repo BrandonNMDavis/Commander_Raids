@@ -36,7 +36,7 @@
         }
         button:active { transform: scale(0.95); }
         button:hover { background-color: #ff3333; }
-        button:disabled { background-color: #444; opacity: 0.6; }
+        button:disabled { background-color: #444; opacity: 0.6; cursor: not-allowed; }
 
         .audio-controls {
             margin: 20px 0;
@@ -78,48 +78,67 @@
             line-height: 1.4;
         }
 
-        /* Boon and Blight Tracker Styling */
+        /* Upgraded Boon & Blight Tracker */
         .gauntlet-tracker-box {
             background-color: #1f1f1f;
             border: 1px solid #444;
             border-radius: 8px;
             padding: 15px;
             margin-bottom: 20px;
+            text-align: left;
+        }
+        .tracker-header {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
         }
-        .tracker-column {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .tracker-title {
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .boon-text { color: #218c74; }
-        .blight-text { color: #ffaa00; }
-        .tracker-controls {
+        .blight-control {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .btn-counter {
-            padding: 5px 12px;
-            font-size: 14px;
-            margin: 0;
-            border-radius: 4px;
-        }
-        .counter-val {
-            font-size: 22px;
-            font-weight: bold;
-            min-width: 25px;
-        }
+        .blight-text { color: #ffaa00; font-weight: bold; }
+        .btn-counter { padding: 4px 10px; font-size: 14px; margin: 0; border-radius: 4px; }
+        .counter-val { font-size: 20px; font-weight: bold; min-width: 20px; text-align: center; }
         
+        .active-boons-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .boon-item {
+            background-color: #2a2a2a;
+            padding: 8px;
+            border-left: 4px solid #218c74;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .boon-title { font-weight: bold; color: #218c74; }
+        .rarity-common { color: #ccc; }
+        .rarity-uncommon { color: #74b9ff; }
+        .rarity-rare { color: #fdcb6e; }
+        .rarity-mythic { color: #ff7675; }
+
+        /* Boon Selection Modal Styles */
+        .boon-card {
+            background-color: #333;
+            border: 1px solid #555;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .boon-card:hover {
+            background-color: #444;
+            border-color: #218c74;
+        }
+
         #hp-display { transition: color 0.2s; }
         .damage-pulse { color: #ff0000; animation: shake 0.3s; }
         .heal-pulse { color: #00ff00; }
@@ -136,7 +155,7 @@
             background-color: #111;
             padding: 15px;
             border-radius: 8px;
-            height: 300px;
+            height: 250px;
             overflow-y: auto;
             text-align: left;
             margin-top: 20px;
@@ -162,6 +181,7 @@
         .btn-undo { background-color: #888; }
         .btn-damage { background-color: #b33939; }
         .btn-heal { background-color: #218c74; }
+        .btn-draw { background-color: #0984e3; font-size: 14px; padding: 8px 16px; }
         .btn-restart { background-color: #222; border: 1px solid #666; margin-top: 20px; width: 100%; }
         
         .modal {
@@ -180,6 +200,8 @@
             max-width: 500px;
             border-radius: 12px;
             text-align: left;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .close-btn { color: #ff5555; float: right; font-size: 32px; font-weight: bold; cursor: pointer; }
 
@@ -208,6 +230,15 @@
         <h3 style="color: #ff5555; margin-bottom: 5px;">Gauntlet Mode Extras</h3>
         <p style="font-size: 14px;"><strong>Blights:</strong> When a blight effect is rolled, slip a Blight Token into the sleeve of the top card of your deck. When drawn, resolve the Blight immediately. Pay {3} to cleanse it and cast the card for free.</p>
         <p style="font-size: 14px;"><strong>Boons:</strong> You draw and choose 1 Boon after defeating a Lieutenant. Boons act like emblems for the rest of the Gauntlet run.</p>
+    </div>
+</div>
+
+<div id="boonModal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin-top: 0; color: #218c74;">Choose Your Boon</h2>
+        <p style="font-size: 14px; color: #ccc;">Select one Boon to keep. The others will be shuffled back into the deck.</p>
+        <div id="boon-choices-container">
+            </div>
     </div>
 </div>
 
@@ -282,20 +313,18 @@
     </div>
 
     <div id="gauntlet-tracker-box" class="gauntlet-tracker-box" style="display: none;">
-        <div class="tracker-column">
-            <span class="tracker-title boon-text">Active Boons</span>
-            <div class="tracker-controls">
-                <button class="btn-counter btn-undo" onclick="adjustBoon(-1)">-</button>
-                <span id="boon-display" class="counter-val">0</span>
-                <button class="btn-counter btn-heal" onclick="adjustBoon(1)">+</button>
+        <div style="width: 100%;">
+            <div class="tracker-header">
+                <button class="btn-draw" onclick="drawBoons()">🎁 Defeated Boss! Draw Boons</button>
+                <div class="blight-control">
+                    <span class="blight-text">Blights:</span>
+                    <button class="btn-counter btn-undo" onclick="adjustBlight(-1)">-</button>
+                    <span id="blight-display" class="counter-val">0</span>
+                    <button class="btn-counter btn-damage" onclick="adjustBlight(1)">+</button>
+                </div>
             </div>
-        </div>
-        <div class="tracker-column">
-            <span class="tracker-title blight-text">Active Blights</span>
-            <div class="tracker-controls">
-                <button class="btn-counter btn-undo" onclick="adjustBlight(-1)">-</button>
-                <span id="blight-display" class="counter-val">0</span>
-                <button class="btn-counter btn-damage" onclick="adjustBlight(1)">+</button>
+            <div class="active-boons-list" id="active-boons-container">
+                <div style="color: #666; font-style: italic; font-size: 13px;">No Boons Acquired Yet.</div>
             </div>
         </div>
     </div>
@@ -312,19 +341,80 @@
         <div class="log-entry">Encounter started. Good luck!</div>
     </div>
 
-    <button class="btn-restart" onclick="restartRaid()">End Game</button>
+    <button class="btn-restart" onclick="restartRaid()">End Game & Reset</button>
 </div>
 
 <script>
+    // --- BOON DECK DATA ---
+    const allBoons = [
+        // Common (24)
+        { rarity: "Common", name: "Blade Dance", text: "At the beginning of combat, choose a creature you control. It gains first strike until the end of combat." },
+        { rarity: "Common", name: "Healing Banner", text: "At the beginning of combat, choose a creature you control. It gains lifelink until the end of combat." },
+        { rarity: "Common", name: "Kite Sail", text: "At the beginning of combat, choose a creature you control. It gains flying until the end of combat." },
+        { rarity: "Common", name: "Stampeding Behemoth", text: "At the beginning of combat, choose a creature you control. It gains trample until the end of combat." },
+        { rarity: "Common", name: "Battle Charger", text: "At the beginning of combat, choose a creature you control. It gains Haste until the end of combat." },
+        { rarity: "Common", name: "Mighty Roar of the Pride", text: "At the beginning of combat, choose a creature you control. It gains +3/+3 until the end of combat." },
+        { rarity: "Common", name: "Shadow Stalker", text: "At the beginning of combat, choose a creature you control. It gains menace until the end of combat." },
+        { rarity: "Common", name: "Font of Healing", text: "At the beginning of your upkeep, gain 1 life." },
+        { rarity: "Common", name: "Compulsive Researcher", text: "At the beginning of your upkeep you may discard a card, if you do draw a card." },
+        { rarity: "Common", name: "Frugal Apprentice", text: "Reduce your commander cost by {1} colorless." },
+        { rarity: "Common", name: "Might of the Pack", text: "Creatures you control get +1/+1." },
+        { rarity: "Common", name: "Soul Harvester", text: "Whenever a creature enters the battlefield under your control, you may pay {2}. If you do, draw a card." },
+        { rarity: "Common", name: "Call to Arms", text: "At the beginning of your end step, create a 1/1 soldier token." },
+        { rarity: "Common", name: "Foundry Assistant", text: "Artifact spells you cast cost {1} less to cast." },
+        { rarity: "Common", name: "Nature's Bounty", text: "Flip over Nature’s Bounty until the start of your next game: Search library for a basic land and put it on battlefield tapped." },
+        { rarity: "Common", name: "Thoughtful Offering", text: "{Tap}: Add {1}. Pay {1}, Flip over until the start of your next game: Draw a card." },
+        { rarity: "Common", name: "Hand Expansion", text: "Increase your maximum hand size by 2." },
+        { rarity: "Common", name: "Blood for Soil", text: "Once per turn pay 2 life and sac a basic land: search library for a basic land and put it onto battlefield tapped." },
+        { rarity: "Common", name: "Seer's Insight", text: "At the beginning of your upkeep, scry 1." },
+        { rarity: "Common", name: "Mystic Scribe", text: "Instants and sorcery spells you cast cost 1 less to cast." },
+        { rarity: "Common", name: "Nightwatch Agent", text: "At the beginning of your upkeep, surveil 1." },
+        { rarity: "Common", name: "Treasure Trove", text: "At the beginning of your end step, create a treasure token." },
+        { rarity: "Common", name: "Investigation Expert", text: "At the beginning of your end step, create a clue token." },
+        { rarity: "Common", name: "Echoes from Beyond", text: "Once per game exile 7 cards from your graveyard to draw three cards. Flip until start of next game." },
+        
+        // Uncommon (12)
+        { rarity: "Uncommon", name: "Blades of Fury", text: "At the beginning of combat, choose a creature you control. It gains double strike until the end of combat." },
+        { rarity: "Uncommon", name: "Eternal Champion", text: "At the beginning of combat, choose a creature you control. It gains undying until the end of combat." },
+        { rarity: "Uncommon", name: "Adamant Will", text: "At the beginning of combat, choose a creature you control. It gains indestructible until the end of combat." },
+        { rarity: "Uncommon", name: "Rummaging Researcher", text: "At the beginning of your upkeep, you may draw a card. If you do, discard a card." },
+        { rarity: "Uncommon", name: "Explorer's Expedition", text: "You may play an additional land on each of your turns." },
+        { rarity: "Uncommon", name: "Commander's Call", text: "Reduce your commander cost by {2}." },
+        { rarity: "Uncommon", name: "Mentor's Insight", text: "Whenever a creature enters the battlefield under your control, you may draw a card." },
+        { rarity: "Uncommon", name: "Savage Summoning", text: "Whenever a creature enters the battlefield under your control, you may pay {2} to have it fight target creature." },
+        { rarity: "Uncommon", name: "Beastmaster's Call", text: "At the beginning of your end step, create a 3/3 beast token." },
+        { rarity: "Uncommon", name: "Library of Abundance", text: "You have no maximum hand size." },
+        { rarity: "Uncommon", name: "Chromatic Nexus", text: "Lands that produce mana have '{Tap}: Add one mana of any color.'" },
+        { rarity: "Uncommon", name: "Prismatic Oasis", text: "{Tap}: Add one mana of any color in your commander’s color identity." },
+
+        // Rare (6)
+        { rarity: "Rare", name: "Soothing Revelation", text: "If you would draw a card, instead draw two cards and gain 2 life." },
+        { rarity: "Rare", name: "Fortune's Favor", text: "At the beginning of your first main phase, gain 1 life for each card in your hand." },
+        { rarity: "Rare", name: "Enhanced Loyalty", text: "You may activate a planeswalker ability you control an additional time each turn." },
+        { rarity: "Rare", name: "Tome of Wisdom", text: "At the beginning of your upkeep, you may draw a card." },
+        { rarity: "Rare", name: "Ancient Insignia", text: "Reduce your commander’s cost by {3}." },
+        { rarity: "Rare", name: "Grimoire of Necromancy", text: "You may cast instant and sorcery cards from your graveyard. If a card cast this way would be put into your graveyard, exile it instead." },
+
+        // Mythic (3)
+        { rarity: "Mythic", name: "Apex Commanders", text: "Commanders you control have hexproof, indestructible and lifelink." },
+        { rarity: "Mythic", name: "Mana Breaker's Charm", text: "The first spell you cast each turn costs no colorless mana." },
+        { rarity: "Mythic", name: "Unwavering Presence", text: "Untap all permanents you control during each other player’s untap step." }
+    ];
+
+    let activeDeck = [];
+    let activeBoonsList = [];
+    let currentlyDrawnBoons = [];
+
     let currentTurn = 1;
     let monsterHp = 0;
     let currentMode = "standard";
     let currentDifficulty = "easy";
     let currentBoss = "rona";
-    let boonsCount = 0;
     let blightsCount = 0;
     let historyStack = [];
     const music = document.getElementById("bg-music");
+
+    // --- GAME LOGIC ---
 
     function toggleMode() {
         const mode = document.getElementById("gameMode").value;
@@ -348,17 +438,14 @@
         modal.style.display = (modal.style.display === "block") ? "none" : "block";
     }
 
-    // NEW: Counter Adjustment Functions
-    function adjustBoon(amount) {
-        saveState();
-        boonsCount = Math.max(0, boonsCount + amount);
-        document.getElementById("boon-display").innerText = boonsCount;
-    }
-
-    function adjustBlight(amount) {
-        saveState();
-        blightsCount = Math.max(0, blightsCount + amount);
-        document.getElementById("blight-display").innerText = blightsCount;
+    function shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        }
+        return array;
     }
 
     function startGame() {
@@ -377,16 +464,18 @@
         } else {
             currentBoss = document.getElementById("gauntletBoss").value;
             document.getElementById("static-abilities-box").style.display = "block";
-            document.getElementById("gauntlet-tracker-box").style.display = "flex";
+            document.getElementById("gauntlet-tracker-box").style.display = "block";
             
-            // Reset counters on fresh start
-            boonsCount = 0;
-            blightsCount = 0;
-            document.getElementById("boon-display").innerText = boonsCount;
+            // Generate full fresh deck and clear boons IF starting fresh
+            if(activeDeck.length === 0 && activeBoonsList.length === 0) {
+                activeDeck = shuffle([...allBoons]);
+            }
+            
+            blightsCount = 0; // Blights reset or persist? Assuming reset per game/player choice.
             document.getElementById("blight-display").innerText = blightsCount;
+            renderActiveBoons();
             
             const staticText = document.getElementById("static-abilities-text");
-            
             if (currentBoss === "rona") {
                 monsterHp = count * 20;
                 staticText.innerHTML = "<strong>Rona, Sheoldred's Faithful:</strong> Whenever a player casts an instant or sorcery spell, each player (except Rona) loses 2 life.";
@@ -405,15 +494,101 @@
         saveState();
     }
 
+    // --- BOON TRACKER LOGIC ---
+
+    function drawBoons() {
+        if(activeDeck.length < 3) {
+            alert("Not enough boons left in the deck!");
+            return;
+        }
+        
+        currentlyDrawnBoons = [activeDeck.pop(), activeDeck.pop(), activeDeck.pop()];
+        
+        const container = document.getElementById("boon-choices-container");
+        container.innerHTML = "";
+        
+        currentlyDrawnBoons.forEach((boon, index) => {
+            const cssClass = "rarity-" + boon.rarity.toLowerCase();
+            container.innerHTML += `
+                <div class="boon-card" onclick="selectBoon(${index})">
+                    <div class="boon-title ${cssClass}">[${boon.rarity}] ${boon.name}</div>
+                    <div style="font-size: 13px; margin-top: 5px; color: #eee;">${boon.text}</div>
+                </div>
+            `;
+        });
+        
+        document.getElementById("boonModal").style.display = "block";
+    }
+
+    function selectBoon(index) {
+        // Add selected to active
+        activeBoonsList.push(currentlyDrawnBoons[index]);
+        
+        // Put unselected back and shuffle
+        const unselected = currentlyDrawnBoons.filter((_, i) => i !== index);
+        activeDeck.push(...unselected);
+        activeDeck = shuffle(activeDeck);
+        
+        document.getElementById("boonModal").style.display = "none";
+        renderActiveBoons();
+        saveState();
+    }
+
+    function renderActiveBoons() {
+        const container = document.getElementById("active-boons-container");
+        if (activeBoonsList.length === 0) {
+            container.innerHTML = '<div style="color: #666; font-style: italic; font-size: 13px;">No Boons Acquired Yet.</div>';
+            return;
+        }
+        
+        container.innerHTML = "";
+        activeBoonsList.forEach(boon => {
+            const cssClass = "rarity-" + boon.rarity.toLowerCase();
+            container.innerHTML += `
+                <div class="boon-item">
+                    <span class="boon-title ${cssClass}">[${boon.rarity}] ${boon.name}:</span>
+                    <span>${boon.text}</span>
+                </div>
+            `;
+        });
+    }
+
+    function adjustBlight(amount) {
+        saveState();
+        blightsCount = Math.max(0, blightsCount + amount);
+        document.getElementById("blight-display").innerText = blightsCount;
+    }
+
+    // --- ENCOUNTER LOGIC ---
+
     function saveState() {
         historyStack.push({
             turn: currentTurn,
             hp: monsterHp,
-            boons: boonsCount,
             blights: blightsCount,
+            activeBoonsBackup: [...activeBoonsList],
+            deckBackup: [...activeDeck],
             logHTML: document.getElementById("action-log").innerHTML,
             btnText: document.getElementById("action-btn").innerText
         });
+    }
+
+    function undoTurn() {
+        if (historyStack.length <= 1) return;
+        historyStack.pop();
+        const prev = historyStack[historyStack.length - 1];
+        currentTurn = prev.turn;
+        monsterHp = prev.hp;
+        blightsCount = prev.blights;
+        activeBoonsList = [...prev.activeBoonsBackup];
+        activeDeck = [...prev.deckBackup];
+        
+        document.getElementById("turn-display").innerText = currentTurn;
+        document.getElementById("hp-display").innerText = monsterHp;
+        document.getElementById("blight-display").innerText = blightsCount;
+        renderActiveBoons();
+        document.getElementById("action-log").innerHTML = prev.logHTML;
+        document.getElementById("action-btn").innerText = prev.btnText;
     }
 
     function damageMonster() {
@@ -433,23 +608,6 @@
         display.innerText = monsterHp;
         display.classList.add(animationClass);
         setTimeout(() => display.classList.remove(animationClass), 300);
-    }
-
-    function undoTurn() {
-        if (historyStack.length <= 1) return;
-        historyStack.pop();
-        const prev = historyStack[historyStack.length - 1];
-        currentTurn = prev.turn;
-        monsterHp = prev.hp;
-        boonsCount = prev.boons || 0;
-        blightsCount = prev.blights || 0;
-        
-        document.getElementById("turn-display").innerText = currentTurn;
-        document.getElementById("hp-display").innerText = monsterHp;
-        document.getElementById("boon-display").innerText = boonsCount;
-        document.getElementById("blight-display").innerText = blightsCount;
-        document.getElementById("action-log").innerHTML = prev.logHTML;
-        document.getElementById("action-btn").innerText = prev.btnText;
     }
 
     function rerollDie(elementId, DR) {
@@ -486,7 +644,8 @@
     function restartRaid() {
         historyStack = [];
         currentTurn = 1;
-        boonsCount = 0;
+        activeDeck = [];
+        activeBoonsList = [];
         blightsCount = 0;
         document.getElementById("turn-display").innerText = "1";
         document.getElementById("action-log").innerHTML = '<div class="log-entry">Encounter started. Good luck!</div>';

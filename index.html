@@ -3,80 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Commander Raids App</title>
+    <title>Commander Raids - Gauntlet Edition</title>
     <style>
         :root {
-            --accent-color: #ff5555;
-            --accent-glow: rgba(255, 85, 85, 0.4);
-            --bg-dark: #121212;
-            --panel-bg: #1e1e1e;
-            --panel-border: #333;
+            --accent-color: #b32929;
+            --accent-glow: rgba(179, 41, 41, 0.3);
+            --bg-dark: #1a1512;
+            --panel-bg: #261f1b;
+            --parchment: #f4ebd0;
+            --panel-border: #42352e;
+            --mtg-common: #d1d8e0;
+            --mtg-uncommon: #54a0ff;
+            --mtg-rare: #f5cd79;
+            --mtg-mythic: #ff5e57;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Georgia', Times, serif;
             background-color: var(--bg-dark);
-            color: #e0e0e0;
+            color: #e6ded4;
             text-align: center;
             margin: 0;
             padding: 20px;
-            transition: background-color 0.5s ease;
+            background-image: radial-gradient(circle, #2d231e 0%, #1a1512 100%);
+            transition: all 0.5s ease;
         }
 
         .container {
-            max-width: 750px;
+            max-width: 780px;
             margin: 0 auto;
             background-color: var(--panel-bg);
-            padding: 25px;
-            border-radius: 16px;
-            border: 1px solid var(--panel-border);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 15px var(--accent-glow);
-            transition: box-shadow 0.5s ease, border-color 0.5s ease;
+            padding: 30px;
+            border-radius: 8px;
+            border: 2px solid #59463b;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85), inset 0 0 20px rgba(0,0,0,0.4);
+            position: relative;
         }
 
+        /* Medieval Frame Corner Decals */
+        .container::before, .container::after {
+            content: "";
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #7c6253;
+        }
+        .container::before { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+        .container::after { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
         h1 { 
-            color: #fff; 
-            text-shadow: 0 0 10px var(--accent-glow);
-            font-size: 2.5rem;
-            letter-spacing: 1px;
+            font-family: 'Palatino', 'Georgia', serif;
+            color: var(--parchment); 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            font-size: 2.4rem;
+            font-weight: normal;
+            letter-spacing: 2px;
             margin-bottom: 25px;
-            transition: text-shadow 0.5s ease;
+            text-transform: uppercase;
+            border-bottom: 1px solid #59463b;
+            padding-bottom: 15px;
         }
 
         h2, h3 {
-            color: #fff;
-            letter-spacing: 0.5px;
+            font-family: 'Palatino', 'Georgia', serif;
+            color: var(--parchment);
+            font-weight: normal;
         }
 
-        /* Sci-Fi UI Buttons */
+        /* Tabletop Style Buttons */
         button {
-            background-color: var(--accent-color);
-            color: #121212;
-            border: none;
-            padding: 12px 24px;
-            font-size: 15px;
-            font-weight: 800;
-            border-radius: 8px;
+            background-color: #591b1b;
+            color: var(--parchment);
+            border: 1px solid #802828;
+            padding: 12px 26px;
+            font-family: 'Georgia', serif;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 4px;
             cursor: pointer;
-            margin: 5px;
-            text-transform: uppercase;
+            margin: 6px;
             letter-spacing: 0.5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: all 0.15s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            transition: all 0.2s ease;
         }
         button:hover { 
-            background-color: #fff;
-            box-shadow: 0 0 12px var(--accent-color);
-            transform: translateY(-1px);
+            background-color: #802828;
+            border-color: #b33939;
+            color: #fff;
+            box-shadow: 0 0 8px rgba(179, 41, 41, 0.6);
         }
         button:active { 
+            background-color: #401313;
             transform: translateY(1px); 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
         button:disabled { 
-            background-color: #2a2a2a; 
-            color: #666; 
-            opacity: 0.5; 
+            background-color: #211b18; 
+            color: #594a42; 
+            border-color: #332924;
+            opacity: 0.6; 
             cursor: not-allowed;
             box-shadow: none;
             transform: none;
@@ -84,14 +108,14 @@
 
         select, input {
             padding: 12px;
-            font-size: 16px;
-            border-radius: 8px;
+            font-family: 'Georgia', serif;
+            font-size: 15px;
+            border-radius: 4px;
             margin: 8px;
-            background-color: #1a1a1a;
-            color: #fff;
-            border: 2px solid #333;
+            background-color: #15110e;
+            color: var(--parchment);
+            border: 1px solid #59463b;
             outline: none;
-            transition: border-color 0.2s;
         }
         select:focus, input:focus {
             border-color: var(--accent-color);
@@ -99,38 +123,38 @@
 
         #game-screen { display: none; }
 
-        /* Tactical Display Stats Panels */
+        /* MTG Frame Layout Panels */
         .stats-box {
             display: flex;
             gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         .stat-panel {
             flex: 1;
-            background: #151515;
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid var(--panel-border);
-            transition: border-color 0.5s ease;
+            background: #191412;
+            padding: 18px;
+            border-radius: 6px;
+            border: 1px solid #42352e;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
         }
         .stat-label {
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
-            color: #888;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
+            color: #a69285;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
         }
         .stat-value {
-            font-size: 28px;
-            font-weight: 900;
-            color: #fff;
-            font-mono: monospace;
+            font-size: 32px;
+            font-family: 'Palatino', serif;
+            color: var(--parchment);
         }
         
-        #hp-display { transition: color 0.1s; }
-        .damage-pulse { color: #ff3838; animation: shake 0.3s; }
-        .heal-pulse { color: #26de81; }
-        @keyframes shake {
+        #hp-display-box { transition: background-color 0.2s ease; }
+        .damage-pulse { background-color: #591b1b !important; animation: screenShake 0.3s; }
+        .heal-pulse { background-color: #1b4d22 !important; }
+        
+        @keyframes screenShake {
             0% { transform: translate(2px, 1px); }
             20% { transform: translate(-1px, -2px); }
             40% { transform: translate(-2px, 0px); }
@@ -139,111 +163,117 @@
             100% { transform: translate(0px, 0px); }
         }
 
-        /* Dynamic Ability Box */
+        /* Storybook Ability Callout */
         .static-abilities-box {
-            background-color: rgba(20, 20, 20, 0.8);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            background-color: #1c1613;
+            padding: 18px;
+            border-radius: 6px;
+            margin-bottom: 25px;
             text-align: left;
             border-left: 4px solid var(--accent-color);
             font-size: 14px;
-            line-height: 1.5;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
-            transition: border-color 0.5s ease;
+            line-height: 1.6;
+            border: 1px solid #42352e;
+            border-left: 4px solid var(--accent-color);
+            transition: all 0.5s ease;
         }
 
-        /* Component Grid Layout */
+        /* Tabletop Dashboard Deck Components */
         .gauntlet-tracker-box {
-            background-color: #151515;
-            border: 1px solid var(--panel-border);
-            border-radius: 10px;
-            margin-bottom: 20px;
+            background-color: #171210;
+            border: 1px solid #3d3029;
+            border-radius: 6px;
+            margin-bottom: 25px;
             display: flex;
             text-align: left;
-            transition: border-color 0.5s ease;
         }
         .tracker-column {
             flex: 1;
             padding: 20px;
         }
         .tracker-column:first-child {
-            border-right: 1px solid #252525;
+            border-right: 1px solid #332822;
         }
         
         @media (max-width: 650px) {
             .gauntlet-tracker-box { flex-direction: column; }
-            .tracker-column:first-child { border-right: none; border-bottom: 1px solid #252525; }
+            .tracker-column:first-child { border-right: none; border-bottom: 1px solid #332822; }
         }
         
-        /* Interactive Boon Board Cards */
+        /* MTG Style Boon Cards */
         .active-boons-list {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            max-height: 320px;
+            gap: 12px;
+            max-height: 360px;
             overflow-y: auto;
             padding-right: 5px;
         }
         .boon-item {
-            background-color: #1e1e1e;
-            padding: 12px;
-            border-left: 4px solid #218c74;
+            background-color: #211a17;
+            padding: 14px;
             border-radius: 6px;
             font-size: 13px;
-            border: 1px solid #2d2d2d;
-            border-left: 4px solid #218c74;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            transform-origin: center left;
+            border: 1px solid #4a3b33;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, background-color 0.3s ease;
+            transform-origin: bottom left;
         }
-        /* Tap/Exhaust Animation */
+        
+        /* 90-Degree Clockwise Tapping Mechanical Animation */
         .boon-item.exhausted {
+            transform: rotate(3deg) translateY(2px);
             opacity: 0.4;
-            background-color: #161616;
-            border-color: #222;
-            border-left-color: #444;
-            transform: skewX(-5deg) scale(0.98);
+            background-color: #14100e;
+            border-color: #2d241f;
         }
+        
         .boon-header-line {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #3d3029;
+            padding-bottom: 4px;
         }
-        .boon-title { font-weight: bold; font-size: 14px; }
-        .rarity-common { color: #a5b1c2; }
-        .rarity-uncommon { color: #45aaf2; }
-        .rarity-rare { color: #f7b731; }
-        .rarity-mythic { color: #eb3b5a; }
+        .boon-title { font-family: 'Palatino', serif; font-weight: bold; font-size: 14px; }
+        
+        .rarity-common { color: var(--mtg-common); }
+        .rarity-uncommon { color: var(--mtg-uncommon); }
+        .rarity-rare { color: var(--mtg-rare); text-shadow: 0 0 2px rgba(245, 205, 121, 0.3); }
+        .rarity-mythic { color: var(--mtg-mythic); text-shadow: 0 0 3px rgba(255, 94, 87, 0.4); }
 
         .btn-exhaust {
-            background-color: #2d2d2d;
-            color: #aaa;
+            background-color: #332822;
+            color: #a69285;
+            font-family: 'Georgia', serif;
             font-size: 10px;
-            padding: 4px 8px;
+            padding: 3px 8px;
             margin: 0;
-            border-radius: 4px;
-            font-weight: bold;
+            border-radius: 3px;
+            border: 1px solid #4a3b33;
             box-shadow: none;
+            text-transform: uppercase;
         }
         .btn-exhaust.active-toggle {
-            background-color: rgba(33, 140, 116, 0.2);
-            color: #218c74;
-            border: 1px solid #218c74;
+            background-color: #1a3a2a;
+            color: #52b788;
+            border-color: #2d6a4f;
         }
         .btn-exhaust.active-toggle:hover {
-            background-color: #218c74;
-            color: #121212;
+            background-color: #2d6a4f;
+            color: #fff;
         }
 
-        /* Tactile Blight Panels */
+        /* Weathered Blight Frames */
         .blight-item {
-            background-color: #1e1e1e;
-            border: 1px solid #2d2d2d;
-            border-left: 4px solid #fa8231;
+            background-color: #1c1513;
+            border: 1px solid #3d2b24;
+            border-left: 4px solid #d97724;
             padding: 12px;
-            border-radius: 6px;
+            border-radius: 4px;
             margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
         }
         .blight-header {
             display: flex;
@@ -253,94 +283,91 @@
         }
         .blight-desc {
             font-size: 12px;
-            color: #999;
+            color: #b3a296;
             line-height: 1.4;
+            font-style: italic;
         }
-        .btn-counter { padding: 4px 12px; font-size: 14px; margin: 0; border-radius: 4px; background-color: #2d2d2d; color: #fff; }
-        .btn-counter:hover { background-color: #444; }
-        .counter-val { font-size: 18px; font-weight: bold; min-width: 25px; display: inline-block; text-align: center; color: #fff;}
+        .btn-counter { padding: 2px 10px; font-family: monospace; font-size: 14px; margin: 0; border-radius: 3px; background-color: #332822; color: var(--parchment); border: 1px solid #4a3b33; }
+        .btn-counter:hover { background-color: #4a3b33; }
+        .counter-val { font-size: 16px; font-weight: bold; min-width: 25px; display: inline-block; text-align: center; color: var(--parchment);}
 
-        /* Tactical Combat Feed log */
+        /* Ancient Manuscript Style Log */
         .log-box {
-            background-color: #0b0b0b;
-            padding: 15px;
-            border-radius: 10px;
-            height: 220px;
+            background-color: #0f0c0a;
+            padding: 18px;
+            border-radius: 6px;
+            height: 200px;
             overflow-y: auto;
             text-align: left;
             margin-top: 25px;
-            border: 1px solid #222;
-            font-family: 'Courier New', Courier, monospace;
+            border: 1px solid #332822;
+            font-family: 'Georgia', serif;
             font-size: 13px;
-            box-shadow: inset 0 4px 10px rgba(0,0,0,0.8);
+            line-height: 1.5;
+            box-shadow: inset 0 3px 8px rgba(0,0,0,0.8);
         }
         .log-entry { 
-            margin-bottom: 8px; 
-            border-bottom: 1px solid #151515; 
-            padding-bottom: 8px; 
-            line-height: 1.4; 
-            color: #aaa;
+            margin-bottom: 10px; 
+            border-bottom: 1px solid #1a1412; 
+            padding-bottom: 10px; 
+            color: #c4b4a9;
         }
-        .monster-action { color: #f7b731; font-weight: bold; }
+        .monster-action { color: #f5cd79; font-weight: bold; }
         
         .reroll-btn {
-            background-color: #222;
-            color: #888;
-            border: 1px solid #333;
-            padding: 2px 6px;
+            background-color: #1a1412;
+            color: #8c7669;
+            border: 1px solid #332822;
+            padding: 2px 8px;
             font-size: 11px;
             margin-left: 10px;
-            border-radius: 4px;
+            border-radius: 3px;
             text-transform: none;
             box-shadow: none;
         }
-        .reroll-btn:hover { background-color: #333; color: #fff; }
+        .reroll-btn:hover { background-color: #2b201b; color: var(--parchment); }
 
-        .rolling-text { color: var(--accent-color); font-style: italic; animation: pulse 0.5s infinite; }
+        .rolling-text { color: var(--accent-color); font-style: italic; animation: pulse 0.6s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        /* Button Action Colors */
-        .btn-undo { background-color: #4b6584; color: #fff; }
-        .btn-damage { background-color: #eb3b5a; color: #fff; }
-        .btn-heal { background-color: #20bf6b; color: #fff; }
-        .btn-advance-boss { background-color: #3867d6; color: #fff; font-size: 14px; padding: 12px 16px; width: 100%; margin: 0 0 10px 0; }
-        .btn-victory { background-color: #f7b731; font-size: 14px; padding: 12px 16px; width: 100%; margin: 0 0 10px 0; color: #121212; box-shadow: 0 0 15px rgba(247, 183, 49, 0.4); }
-        .btn-restart { background-color: #1e1e1e; border: 1px solid #444; color: #aaa; margin-top: 25px; width: 100%; }
+        /* Tactical Deck Controls overrides */
+        .btn-undo { background-color: #3c4e63; border-color: #4f6782; }
+        .btn-undo:hover { background-color: #4f6782; }
+        .btn-damage { background-color: #8c2020; border-color: #b32929; }
+        .btn-damage:hover { background-color: #b32929; }
+        .btn-heal { background-color: #1e5335; border-color: #2d7a4e; }
+        .btn-heal:hover { background-color: #2d7a4e; }
         
-        /* Sci-Fi Hologram Overlay Modals */
+        .btn-advance-boss { background-color: #1b4373; border-color: #275f9e; width: 100%; margin: 0 0 12px 0; }
+        .btn-advance-boss:hover { background-color: #275f9e; }
+        .btn-victory { background-color: #ad7711; border-color: #db9818; width: 100%; margin: 0 0 12px 0; color: #121212; }
+        .btn-victory:hover { background-color: #db9818; box-shadow: 0 0 12px rgba(219, 152, 24, 0.5); }
+        .btn-restart { background-color: #1a1412; border: 1px solid #332822; color: #736157; margin-top: 25px; width: 100%; box-shadow: none; }
+        
+        /* Ancient Relic Modals */
         .modal {
             display: none;
             position: fixed;
             z-index: 100;
             left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.9);
-            backdrop-filter: blur(4px);
+            background-color: rgba(10,8,7,0.88);
+            backdrop-filter: blur(3px);
         }
         .modal-content {
-            background-color: #1a1a1a;
-            margin: 5% auto;
+            background-color: #1f1815;
+            margin: 6% auto;
             padding: 30px;
-            border: 2px solid var(--accent-color);
+            border: 1px solid #59463b;
             width: 85%;
-            max-width: 600px;
-            border-radius: 12px;
+            max-width: 620px;
+            border-radius: 6px;
             text-align: left;
             max-height: 80vh;
             overflow-y: auto;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5), 0 0 15px var(--accent-glow);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
         }
-        .close-btn { color: var(--accent-color); float: right; font-size: 32px; font-weight: bold; cursor: pointer; }
-
-        .attribution {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #2d2d2d;
-            font-size: 12px;
-            color: #666;
-            line-height: 1.6;
-        }
-        .attribution a { color: var(--accent-color); text-decoration: none; }
-        .attribution a:hover { text-decoration: underline; }
+        .close-btn { color: var(--parchment); float: right; font-size: 28px; cursor: pointer; }
+        .close-btn:hover { color: var(--accent-color); }
     </style>
 </head>
 <body>
@@ -348,39 +375,39 @@
 <div id="rulesModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" onclick="toggleRules()">&times;</span>
-        <h2 style="margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px;">TACTICAL ARCHIVE</h2>
-        <p><strong>Turn Structure:</strong> Monster takes its action at the end of each round. Skips turn 1, rolls 1 die on turn 2, then adds 1 die every even turn (4, 6, 8...).</p>
-        <p><strong>Counters:</strong> Monster spells cannot be countered via spells. Mechanical counterspells force an immediate re-roll of that action.</p>
-        <p><strong>Immunity:</strong> Commander damage parameters and literal "You win" deck mechanisms have no effect against the encounter.</p>
+        <h2 style="margin-top: 0; border-bottom: 1px solid #4a3b33; padding-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;">Grimoire Archive</h2>
+        <p><strong>Turn Cycle:</strong> The Encounter unleashes its phases at the conclusion of each game round. It remains dormant on Turn 1, casts 1 spell on Turn 2, and dynamically increases output by adding 1 additional die every even round (4, 6, 8...).</p>
+        <p><strong>Counter-magic:</strong> Spells cast from a player deck cannot counter encounter actions. Forcing a counter mechanic via card text commands an immediate re-roll of that action matrix.</p>
+        <p><strong>Immunities:</strong> Commander combat damage specifications and text alterations that declare "You win the game" have no bearing against the entity.</p>
         
-        <hr style="border: 1px solid #333; margin: 20px 0;">
-        <h3 style="color: #ffaa00; margin-bottom: 5px;">Gauntlet Protocols</h3>
-        <p style="font-size: 14px;"><strong>Boons:</strong> Salvaged upon defeating a Lieutenant. Boons act like permanent emblems and stick around for your entire playthrough. Active modules can be exhausted once per round.</p>
-        <p style="font-size: 14px;"><strong>Blights:</strong> Inflicted via specific dice entries. Blighted cards have negative static traits while in play and require an injection of 3 colorless mana to purge.</p>
+        <hr style="border: 0; border-top: 1px solid #4a3b33; margin: 20px 0;">
+        <h3 style="color: #f5cd79; margin-bottom: 8px;">Gauntlet Protocols</h3>
+        <p style="font-size: 14px;"><strong>Boons:</strong> Gathered upon the termination of a Lieutenant. Boons materialize as persistent emblems that endure for the entirety of the campaign run. Triggered modules can be exhausted once per combat match.</p>
+        <p style="font-size: 14px;"><strong>Blights:</strong> Imposed via catastrophic dice occurrences. Blighted cards manifest heavy operational curses while active in any zone and require a tribute of 3 colorless mana to cleanse.</p>
         
-        <h4 style="color: #ffaa00; margin-top: 15px; margin-bottom: 5px;">Blight Manifest Database:</h4>
-        <div style="font-size: 12px; color: #bbb; background: #111; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #ff7675;">
-            <strong style="color: #fff;">Rona's Blight (Uncommon)</strong><br>
-            Put into play under your control when drawn. At the beginning of your upkeep, lose 1 life for each blight token you control.<br>
-            <strong>Purge Cost:</strong> Pay {3} to immediately remove the blight and cast the card for free.
+        <h4 style="color: #f5cd79; margin-top: 18px; margin-bottom: 8px;">Blight Classification Index:</h4>
+        <div style="font-size: 12px; color: #b3a296; background: #15110e; padding: 12px; border-radius: 4px; margin-bottom: 10px; border: 1px solid #332822; border-left: 3px solid #db9818;">
+            <strong style="color: #fff;">Rona's Corruption (Uncommon Artifact Blight)</strong><br>
+            Enters the battlefield immediately under your command upon draw. At the arrival of your upkeep, lose X life, where X is the total number of blights in play across the table.<br>
+            <strong>Cleanse:</strong> Pay {3} to immediately lift the curse and cast the card without paying its mana cost.
         </div>
-        <div style="font-size: 12px; color: #bbb; background: #111; padding: 12px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid #ff7675;">
-            <strong style="color: #fff;">Ertai's Blight (Uncommon)</strong><br>
-            Put into play under your control when drawn. At the beginning of your upkeep sacrifice a creature. If you don't, lose 3 life.<br>
-            <strong>Purge Cost:</strong> Pay {3} to immediately remove the blight and cast the card for free.
+        <div style="font-size: 12px; color: #b3a296; background: #15110e; padding: 12px; border-radius: 4px; margin-bottom: 10px; border: 1px solid #332822; border-left: 3px solid #db9818;">
+            <strong style="color: #fff;">Ertai's Corruption (Uncommon Artifact Blight)</strong><br>
+            Enters the battlefield immediately under your command upon draw. At the arrival of your upkeep, sacrifice a creature permanent. If you cannot, lose 3 life.<br>
+            <strong>Cleanse:</strong> Pay {3} to immediately lift the curse and cast the card without paying its mana cost.
         </div>
-        <div style="font-size: 12px; color: #bbb; background: #111; padding: 12px; border-radius: 6px; border-left: 3px solid #ff7675;">
-            <strong style="color: #fff;">Sheoldred's Blight (Rare)</strong><br>
-            Put into play under your control when drawn. At the beginning of your upkeep draw two cards and lose two life.<br>
-            <strong>Purge Cost:</strong> Pay {3} to immediately remove the blight and cast the card for free.
+        <div style="font-size: 12px; color: #b3a296; background: #15110e; padding: 12px; border-radius: 4px; border: 1px solid #332822; border-left: 3px solid #db9818;">
+            <strong style="color: #fff;">Sheoldred's Corruption (Rare Artifact Blight)</strong><br>
+            Enters the battlefield immediately under your command upon draw. At the arrival of your upkeep, draw two cards and lose 2 life.<br>
+            <strong>Cleanse:</strong> Pay {3} to immediately lift the curse and cast the card without paying its mana cost.
         </div>
     </div>
 </div>
 
 <div id="boonModal" class="modal">
-    <div class="modal-content" style="border-color: #218c74; box-shadow: 0 0 15px rgba(33, 140, 116, 0.4);">
-        <h2 style="margin-top: 0; color: #218c74;">SALVAGED BOON REGISTRY</h2>
-        <p style="font-size: 14px; color: #aaa;">Select one upgrade option to assimilate. The remaining modules will be shuffled back into the matrix.</p>
+    <div class="modal-content" style="border-color: #2d7a4e; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+        <h2 style="margin-top: 0; color: #2d7a4e; font-family: 'Palatino', serif;">ASSIMILATE REWARD PROTOCOL</h2>
+        <p style="font-size: 14px; color: #b3a296;">Select one ancient boon to weave into your campaign structure. Unchosen options will return to the library matrix.</p>
         <div id="boon-choices-container">
             </div>
     </div>
@@ -390,15 +417,15 @@
     <h1>COMMANDER RAIDS</h1>
     
     <div style="margin-bottom: 20px;">
-        <label style="font-weight: bold; color: #ffaa00; display: block; margin-bottom: 5px; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Engagement Matrix:</label>
+        <label style="font-weight: bold; color: #f5cd79; display: block; margin-bottom: 6px; text-transform: uppercase; font-size: 11px; letter-spacing: 1.5px;">Game Format Vector:</label>
         <select id="gameMode" onchange="toggleMode()" style="width: 85%; max-width: 320px;">
-            <option value="standard">Standard Scenario</option>
+            <option value="standard">Standard Encounter</option>
             <option value="gauntlet">Gauntlet Campaign</option>
         </select>
     </div>
 
     <div id="standard-options">
-        <label style="display: block; margin-bottom: 5px; text-transform: uppercase; font-size: 12px; color: #aaa;">Threat Level:</label>
+        <label style="display: block; margin-bottom: 6px; text-transform: uppercase; font-size: 11px; color: #a69285; letter-spacing: 1px;">Difficulty Level:</label>
         <select id="difficulty" style="width: 85%; max-width: 320px;">
             <option value="easy">Easy Vector (20 HP / Player)</option>
             <option value="baseline">Baseline Vector (30 HP / Player)</option>
@@ -407,28 +434,28 @@
     </div>
 
     <div id="gauntlet-options" style="display: none;">
-        <label style="display: block; margin-bottom: 5px; text-transform: uppercase; font-size: 12px; color: #aaa;">Deployment Theater:</label>
-        <select id="gauntletCampaign" style="width: 85%; max-width: 350px;">
+        <label style="display: block; margin-bottom: 6px; text-transform: uppercase; font-size: 11px; color: #a69285; letter-spacing: 1px;">Lore Campaign Path:</label>
+        <select id="gauntletCampaign" style="width: 85%; max-width: 360px;">
             <option value="sheoldred">Sheoldred's Invasion (Rona ➔ Ertai ➔ Sheoldred)</option>
         </select>
     </div>
 
-    <div style="margin-top: 20px;">
-        <label style="text-transform: uppercase; font-size: 12px; color: #aaa; margin-right: 5px;">Opponent Count:</label>
-        <input type="number" id="players" value="4" min="1" style="width: 70px; text-align: center;">
+    <div style="margin-top: 25px;">
+        <label style="text-transform: uppercase; font-size: 11px; color: #a69285; margin-right: 6px; letter-spacing: 0.5px;">Planeswalker Count:</label>
+        <input type="number" id="players" value="4" min="1" style="width: 65px; text-align: center;">
     </div>
     
-    <button onclick="startGame()" style="margin-top: 30px; padding: 15px 40px; font-size: 18px;">Initiate Protocol</button>
+    <button onclick="startGame()" style="margin-top: 35px; padding: 15px 45px; font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">Commence Raid</button>
     
     <div class="audio-controls">
-        <p style="margin-top: 0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px;">Atmosphere Loop (DnB / Jungle Matrix)</p>
+        <p style="margin-top: 0; font-size: 11px; color: #736157; text-transform: uppercase; letter-spacing: 1px;">Atmospheric Score (Orchestral High Fantasy Matrix)</p>
         <audio id="bg-music" loop>
-            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
         </audio>
-        <button style="background-color: #2d2d2d; font-size: 12px; padding: 6px 16px; color:#fff;" onclick="toggleMusic()" id="music-btn">Link Audio Feed 🎵</button>
+        <button style="background-color: #211a17; font-size: 11px; padding: 6px 18px; color: var(--parchment); border-color: #3d3029;" onclick="toggleMusic()" id="music-btn">Channel Orchestral Feed 🎵</button>
     </div>
 
-    <button style="background-color: #1e1e1e; border: 1px solid #333; color: #888;" onclick="toggleRules()">View Archive</button>
+    <button style="background-color: #1a1412; border: 1px solid #332822; color: #736157;" onclick="toggleRules()">Open Library</button>
 
     <div class="attribution">
         Format Blueprint by <strong>Cardboard Odysseys</strong>.<br>
@@ -441,18 +468,18 @@
 
 <div class="container" id="game-screen">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h2 style="margin: 0; text-transform: uppercase; font-size: 1.5rem;" id="combat-tracker-header">Combat Tracker</h2>
-        <button style="background-color: #2d2d2d; padding: 6px 14px; font-size: 12px; margin:0;" onclick="toggleRules()">Archive</button>
+        <h2 style="margin: 0; text-transform: uppercase; font-size: 1.4rem; letter-spacing: 1px;" id="combat-tracker-header">Combat Tracker</h2>
+        <button style="background-color: #332822; padding: 6px 14px; font-size: 12px; margin:0; border-color: #4a3b33;" onclick="toggleRules()">Library</button>
     </div>
     
     <div class="stats-box">
         <div class="stat-panel">
-            <div class="stat-label">Current Phase</div>
+            <div class="stat-label">Battle Round</div>
             <div class="stat-value" id="turn-display-box">TURN <span id="turn-display">1</span></div>
         </div>
-        <div class="stat-panel">
+        <div class="stat-panel" id="hp-display-box">
             <div class="stat-label">Encounter Vitality</div>
-            <div class="stat-value" id="hp-display-box"><span id="hp-display">0</span> <span style="font-size:14px; color:#666;">HP</span></div>
+            <div class="stat-value"><span id="hp-display">0</span> <span style="font-size:14px; color:#8c7669;">HP</span></div>
         </div>
     </div>
 
@@ -463,68 +490,68 @@
     <div id="gauntlet-tracker-box" class="gauntlet-tracker-box" style="display: none;">
         <div class="tracker-column">
             <div class="boon-actions-container">
-                <button id="btn-advance-boss" class="btn-advance-boss" onclick="defeatLieutenantAndAdvance()">⚔️ Purge Host & Progress</button>
-                <div style="font-size: 11px; color: #666; text-align: center; font-family: monospace;">MATRIX POOL: <span id="deck-count-display">45</span> UPGRADES</div>
+                <button id="btn-advance-boss" class="btn-advance-boss" onclick="defeatLieutenantAndAdvance()">⚔️ Purge Boss & Advance</button>
+                <div style="font-size: 11px; color: #8c7669; text-align: center; font-family: sans-serif; letter-spacing: 0.5px; text-transform: uppercase;">BOON MATRIX: <span id="deck-count-display">45</span> CARDS LEFT</div>
             </div>
             <div class="active-boons-list" id="active-boons-container">
-                <div style="color: #444; font-style: italic; font-size: 13px; text-align: center;">No active modifications detected.</div>
+                <div style="color: #594a42; font-style: italic; font-size: 13px; text-align: center;">No active modifications detected.</div>
             </div>
         </div>
         
         <div class="tracker-column">
-            <div style="color: #ffaa00; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; text-align: center; font-size: 12px; letter-spacing: 1px;">Corruption Trackers</div>
+            <div style="color: #f5cd79; font-weight: normal; margin-bottom: 15px; text-transform: uppercase; text-align: center; font-size: 11px; letter-spacing: 1px; font-family: serif;">Active System Curses</div>
             
             <div class="blight-item">
                 <div class="blight-header">
-                    <span style="font-weight:900; color:#fff; font-size:14px; letter-spacing: 0.5px;">RONA CORE</span>
+                    <span style="font-weight:bold; color:#e6ded4; font-size:13px; font-family:serif;">RONA CURSE</span>
                     <div>
                         <button class="btn-counter" onclick="adjustBlight('rona', -1)">-</button>
                         <span id="blight-rona-display" class="counter-val">0</span>
                         <button class="btn-counter" onclick="adjustBlight('rona', 1)">+</button>
                     </div>
                 </div>
-                <div class="blight-desc"><strong>Upkeep:</strong> Lose 1 life per blight in system. <br><strong>Purge:</strong> Pay {3} colorless.</div>
+                <div class="blight-desc">Upkeep: Lose 1 life per active curse frame. <br>Purge: Pay {3} colorless.</div>
             </div>
 
             <div class="blight-item">
                 <div class="blight-header">
-                    <span style="font-weight:900; color:#fff; font-size:14px; letter-spacing: 0.5px;">ERTAI CORE</span>
+                    <span style="font-weight:bold; color:#e6ded4; font-size:13px; font-family:serif;">ERTAI CURSE</span>
                     <div>
                         <button class="btn-counter" onclick="adjustBlight('ertai', -1)">-</button>
                         <span id="blight-ertai-display" class="counter-val">0</span>
                         <button class="btn-counter" onclick="adjustBlight('ertai', 1)">+</button>
                     </div>
                 </div>
-                <div class="blight-desc"><strong>Upkeep:</strong> Sacrifice flesh unit or lose 3 life. <br><strong>Purge:</strong> Pay {3} colorless.</div>
+                <div class="blight-desc">Upkeep: Sacrifice unit or lose 3 life. <br>Purge: Pay {3} colorless.</div>
             </div>
 
             <div class="blight-item">
                 <div class="blight-header">
-                    <span style="font-weight:900; color:#fff; font-size:14px; letter-spacing: 0.5px;">SHEOLDRED CORE</span>
+                    <span style="font-weight:bold; color:#e6ded4; font-size:13px; font-family:serif;">SHEOLDRED CURSE</span>
                     <div>
                         <button class="btn-counter" onclick="adjustBlight('sheoldred', -1)">-</button>
                         <span id="blight-sheoldred-display" class="counter-val">0</span>
                         <button class="btn-counter" onclick="adjustBlight('sheoldred', 1)">+</button>
                     </div>
                 </div>
-                <div class="blight-desc"><strong>Upkeep:</strong> Extract 2 cards and lose 2 life. <br><strong>Purge:</strong> Pay {3} colorless.</div>
+                <div class="blight-desc">Upkeep: Extract 2 cards and lose 2 life. <br>Purge: Pay {3} colorless.</div>
             </div>
         </div>
     </div>
 
-    <button id="action-btn" onclick="takeMonsterTurn()" style="width: calc(100% - 10px); padding: 15px; font-size:16px;">Advance to Turn 2</button>
+    <button id="action-btn" onclick="takeMonsterTurn()" style="width: 100%; padding: 14px; font-size:16px;">Advance to Turn 2</button>
     
-    <div style="margin-top: 5px; display: flex; gap: 10px;">
-        <button class="btn-damage" onclick="damageMonster()" style="flex: 2; padding: 12px;">-1 Boss HP</button>
-        <button class="btn-heal" onclick="healMonster()" style="flex: 1; padding: 12px;">+1 HP</button>
+    <div style="margin-top: 8px; display: flex; gap: 10px;">
+        <button class="btn-damage" onclick="damageMonster()" style="flex: 2; padding: 12px;">Strike Encounter (-1 HP)</button>
+        <button class="btn-heal" onclick="healMonster()" style="flex: 1; padding: 12px;">Heal (+1)</button>
         <button class="btn-undo" onclick="undoTurn()" style="flex: 1; padding: 12px;">Undo</button>
     </div>
     
     <div class="log-box" id="action-log">
-        <div class="log-entry">> Matrix synchronized. Combat zone active. Good luck.</div>
+        <div class="log-entry">> Tabletop field initialized. Standing by for Turn 1 deployments.</div>
     </div>
 
-    <button class="btn-restart" onclick="restartRaid()">Abort Protocol & Reset</button>
+    <button class="btn-restart" onclick="restartRaid()">Abort Campaign Run</button>
 </div>
 
 <script>
@@ -624,24 +651,24 @@
     let historyStack = [];
     const music = document.getElementById("bg-music");
 
-    // --- DYNAMIC THEMING MOTOR ---
+    // --- MTG LORE THEMING ENGINE ---
     function applyTheming(themeKey) {
         const root = document.documentElement;
         if(currentMode === "standard") {
-            root.style.setProperty('--accent-color', '#ff5555');
-            root.style.setProperty('--accent-glow', 'rgba(255, 85, 85, 0.3)');
+            root.style.setProperty('--accent-color', '#8c2020');
+            root.style.setProperty('--accent-glow', 'rgba(140, 32, 32, 0.2)');
             return;
         }
 
         if(themeKey === "rona") {
-            root.style.setProperty('--accent-color', '#00d2ff');
-            root.style.setProperty('--accent-glow', 'rgba(0, 210, 255, 0.25)');
+            root.style.setProperty('--accent-color', '#1b4d73'); // Deep mystical blue
+            root.style.setProperty('--accent-glow', 'rgba(27, 77, 115, 0.25)');
         } else if (themeKey === "ertai") {
-            root.style.setProperty('--accent-color', '#a55eea');
-            root.style.setProperty('--accent-glow', 'rgba(165, 94, 234, 0.25)');
+            root.style.setProperty('--accent-color', '#5c3d73'); // Necromantic plum
+            root.style.setProperty('--accent-glow', 'rgba(92, 61, 115, 0.25)');
         } else if (themeKey === "sheoldred") {
-            root.style.setProperty('--accent-color', '#26de81');
-            root.style.setProperty('--accent-glow', 'rgba(38, 222, 129, 0.25)');
+            root.style.setProperty('--accent-color', '#265935'); // Toxic praetor green
+            root.style.setProperty('--accent-glow', 'rgba(38, 89, 53, 0.25)');
         }
     }
 
@@ -658,8 +685,8 @@
 
     function toggleMusic() {
         const btn = document.getElementById("music-btn");
-        if (music.paused) { music.play(); btn.innerText = "Disconnect Audio Matrix ⏸"; }
-        else { music.pause(); btn.innerText = "Link Audio Feed 🎵"; }
+        if (music.paused) { music.play(); btn.innerText = "Mute Orchestral Feed ⏸"; }
+        else { music.pause(); btn.innerText = "Channel Orchestral Feed 🎵"; }
     }
 
     function toggleRules() {
@@ -739,7 +766,7 @@
             staticText.innerHTML = "<strong>Sheoldred, The Apocalypse:</strong><br>• Whenever an opponent draws a card, they lose 2 life.<br>• No Mercy - Whenever a creature deals damage to you, destroy it.";
         }
 
-        document.getElementById("combat-tracker-header").innerText = `${bossDisplayName} ENCOUNTER (${currentBossIndex + 1}/${currentCampaign.length})`;
+        document.getElementById("combat-tracker-header").innerText = `${bossDisplayName} GAUNTLET STAGE (${currentBossIndex + 1}/${currentCampaign.length})`;
         
         if (resetState) {
             document.getElementById("turn-display").innerText = currentTurn;
@@ -756,10 +783,10 @@
 
         if (currentBossIndex === currentCampaign.length - 1) {
             btn.className = "btn-victory";
-            btn.innerText = "🏆 Defeat General & Win Gauntlet!";
+            btn.innerText = "🏆 Victory over General!";
         } else {
             btn.className = "btn-advance-boss";
-            btn.innerText = "⚔️ Defeat Lieutenant & Advance";
+            btn.innerText = "⚔️ Banish Lieutenant & Advance";
         }
     }
 
@@ -770,7 +797,7 @@
 
         if(currentBossIndex === currentCampaign.length - 1) {
             const logBox = document.getElementById("action-log");
-            logBox.innerHTML = `<div class="log-entry" style="color: #f7b731; font-weight: bold; font-size: 16px; text-align: center;">> TACTICAL VICTORY! SYSTEM RESISTANCE SECURED.</div>` + logBox.innerHTML;
+            logBox.innerHTML = `<div class="log-entry" style="color: #db9818; font-weight: bold; text-align: center;">> CAMPAIGN COMPLETE! ACCORD SECURED!</div>` + logBox.innerHTML;
             alert("Congratulations! You have defeated the General and survived the Gauntlet!");
             return;
         }
@@ -785,7 +812,7 @@
             updateDeckCount();
             
             const logBox = document.getElementById("action-log");
-            logBox.innerHTML = `<div class="log-entry" style="color: #20bf6b; font-weight: bold;">> Data sync: 5 core premium modules added to the reward matrix.</div>` + logBox.innerHTML;
+            logBox.innerHTML = `<div class="log-entry" style="color: #2d7a4e; font-weight: bold;">> The matrix morphs: 5 specific rewards shuffled into the boon selection pool.</div>` + logBox.innerHTML;
         }
 
         activeBoonsList.forEach(boon => boon.exhausted = false);
@@ -795,7 +822,7 @@
 
     function drawBoons() {
         if(activeDeck.length < 3) {
-            alert("Not enough boons left in the deck pool!");
+            alert("Not enough rewards remaining in library pool!");
             return;
         }
         
@@ -808,7 +835,7 @@
             container.innerHTML += `
                 <div class="boon-card" onclick="selectBoon(${index})">
                     <div class="boon-title ${cssClass}">[${boon.rarity}] ${boon.name}</div>
-                    <div style="font-size: 13px; margin-top: 5px; color: #ccc;">${boon.text}</div>
+                    <div style="font-size: 13px; margin-top: 5px; color: #b3a296;">${boon.text}</div>
                 </div>
             `;
         });
@@ -834,7 +861,7 @@
             loadBossData(currentCampaign[currentBossIndex], true);
             
             const logBox = document.getElementById("action-log");
-            logBox.innerHTML = `<div class="log-entry" style="color: #3867d6; font-weight: bold;">> Advancing grid position to: ${currentCampaign[currentBossIndex].toUpperCase()}. Upkeep frames ready.</div>` + logBox.innerHTML;
+            logBox.innerHTML = `<div class="log-entry" style="color: #275f9e; font-weight: bold;">> Moving field coordinate to face: ${currentCampaign[currentBossIndex].toUpperCase()}. All boons readied.</div>` + logBox.innerHTML;
         }
         saveState();
     }
@@ -842,14 +869,14 @@
     function renderActiveBoons() {
         const container = document.getElementById("active-boons-container");
         if (activeBoonsList.length === 0) {
-            container.innerHTML = '<div style="color: #444; font-style: italic; font-size: 13px; text-align: center;">No active modifications detected.</div>';
+            container.innerHTML = '<div style="color: #594a42; font-style: italic; font-size: 13px; text-align: center;">No active modifications detected.</div>';
             return;
         }
         container.innerHTML = "";
         activeBoonsList.forEach((boon, index) => {
             const cssClass = "rarity-" + boon.rarity.toLowerCase();
             const stateClass = boon.exhausted ? "exhausted" : "";
-            const toggleLabel = boon.exhausted ? "🔄 READY" : "💤 TAP";
+            const toggleLabel = boon.exhausted ? "🔄 UNTAP" : "💤 TAP";
             const currentToggleStyle = boon.exhausted ? "" : "active-toggle";
             
             container.innerHTML += `
@@ -951,8 +978,8 @@
         const hpText = document.getElementById("hp-display");
         
         hpText.innerText = monsterHp;
-        hpBox.classList.add(animationClass);
-        setTimeout(() => hpBox.classList.remove(animationClass), 300);
+        hpBox.className = "stat-panel " + animationClass;
+        setTimeout(() => hpBox.className = "stat-panel", 300);
     }
 
     function rerollDie(elementId, DR) {
@@ -970,11 +997,11 @@
         document.getElementById("turn-display").innerText = currentTurn;
         const logBox = document.getElementById("action-log");
         const entryId = "entry-" + Date.now();
-        logBox.innerHTML = `<div class="log-entry" id="${entryId}"><span class="rolling-text">> Executing cycle entry ${currentTurn} actions...</span></div>` + logBox.innerHTML;
+        logBox.innerHTML = `<div class="log-entry" id="${entryId}"><span class="rolling-text">> Shuffling fields for Round ${currentTurn} choices...</span></div>` + logBox.innerHTML;
 
         setTimeout(() => {
             let diceCount = Math.floor(currentTurn / 2);
-            let entryContent = `<strong>Turn ${currentTurn}</strong><br>`;
+            let entryContent = `<strong>Turn ${currentTurn} Actions</strong><br>`;
             for (let i = 0; i < diceCount; i++) {
                 let roll = Math.floor(Math.random() * 20) + 1;
                 let dieId = `die-${Date.now()}-${i}`;
@@ -994,7 +1021,7 @@
         injectedBosses = [];
         blights = { rona: 0, ertai: 0, sheoldred: 0 };
         document.getElementById("turn-display").innerText = "1";
-        document.getElementById("action-log").innerHTML = '<div class="log-entry">> Core rebooted. Re-initializing terminal templates...</div>';
+        document.getElementById("action-log").innerHTML = '<div class="log-entry">> Field reset. Grimoire templates loaded. Ready to deploy.</div>';
         document.getElementById("action-btn").innerText = "Advance to Turn 2";
         document.getElementById("game-screen").style.display = "none";
         document.getElementById("setup-screen").style.display = "block";
